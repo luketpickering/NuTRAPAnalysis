@@ -1,30 +1,25 @@
-#include <cstdlib>
-#include <cerrno>
-#include <climits>
-
 #include <algorithm>
 
-#include <sstream>
 #include <iostream>
 
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
 
-#include "TransversityVariableObjects.hxx"
+#include "TransversityUtils.hxx"
 
-TChain* RooTrackerChain;
+#include "TransversityVariableObjects.hxx"
 
 namespace GeneratorDependent {
 
-const int kGStdHepNPmax = 99999;
+const int kGStdHepNPmax = 350;
 
 const int kGStdHepIdxPx = 0;
 const int kGStdHepIdxPy = 1;
 const int kGStdHepIdxPz = 2;
 const int kGStdHepIdxE  = 3;
 
-const int kNStdHepNPmax = 99999;
+const int kNStdHepNPmax = 100;
 
 const int kNStdHepIdxPx = 0;
 const int kNStdHepIdxPy = 1;
@@ -43,113 +38,52 @@ Int_t GStdHepPdg[kGStdHepNPmax];
 Int_t GStdHepStatus[kGStdHepNPmax];
 Double_t GStdHepP4[kGStdHepNPmax][4];
 
-}
+} // namespace GeneratorDependent
 
-enum Generators {kNEUT,kGENIE,kInvalid};
 
+//There'll be no name collisions in my DOJO, might be binary bloat though...
 namespace {
   int VERBOSE = 1;
 
   std::string TreeName="nRooTracker";
 
+  enum Generators {kNEUT,kGENIE,kInvalid};
+  Generators Generator = kInvalid;
+
+
+//The following variables are the ones that the thinking code will use to get
+// at the specific generator output.
   int kStdHepIdxPx = 0;
   int kStdHepIdxPy = 0;
   int kStdHepIdxPz = 0;
   int kStdHepIdxE = 0;
 
-  int MaxStdHepEntries = 0;
-  std::string MaxStdHepEntriesStr = "";
   Int_t* StdHepN = 0;
   Int_t* StdHepPdg = 0;
   Double_t** StdHepP4 = 0;
   Int_t* StdHepStatus = 0;
 
   int NeutConventionReactionCode;
-  Generators Generator = kInvalid;
-}
 
-//I guess that the pointer array in a statically
-//allocated 2D array shouldn't change this is probably alright?
-template<typename T, size_t N, size_t M>
-T** NewPPOf2DArray(T (&arr)[N][M]){
-  T** DynArrOfP = new T*[N];
-  for(size_t i =0; i < N; ++i){
-    DynArrOfP[i] = arr[i];
-  }
-  return DynArrOfP;
-}
-
-
-enum STR2INT_ERROR { STRINT_SUCCESS,
-                     STRINT_OVERFLOW,
-                     STRINT_UNDERFLOW,
-                     STRINT_INCONVERTIBLE };
-
-///Converts a string to a long, checking for errors.
-///See STR2INT_ERROR for error codes.
-STR2INT_ERROR str2int (long &i, char const *s, int base = 0) {
-  char *end;
-  long  l;
-  errno = 0;
-  l = strtol(s, &end, base);
-  if ((errno == ERANGE && l == LONG_MAX) || l > LONG_MAX) {
-      return STRINT_OVERFLOW;
-  }
-  if ((errno == ERANGE && l == LONG_MIN) || l < LONG_MIN) {
-      return STRINT_UNDERFLOW;
-  }
-  if (*s == '\0' || *end != '\0') {
-      return STRINT_INCONVERTIBLE;
-  }
-  i = l;
-  return STRINT_SUCCESS;
-}
-
-///Converts a string to a int, checking for errors.
-///See STR2INT_ERROR for error codes.
-STR2INT_ERROR str2int (int &i, char const *s, int base = 0) {
-  long holder;
-  STR2INT_ERROR retC = str2int(holder,s,base);
-  if(retC != STRINT_SUCCESS){
-    return retC;
-  }
-  if(holder > INT_MAX) {
-    return STRINT_OVERFLOW;
-  } else if (holder < INT_MIN){
-    return STRINT_UNDERFLOW;
-  }
-  i = holder;
-  return retC;
-}
-
-template<typename T>
-std::string PrintArray(const T* arr, size_t N){
-  std::stringstream ss("");
-  ss << "[ ";
-  for(size_t i = 0; i < N; ++i){
-    ss << arr[i] << (((i+1)==N)?"":", ");
-  }
-  ss << " ]";
-  return ss.str();
-}
+} // namespace
 
 bool SetUpGeneratorDependence(std::string GeneratorName){
+
   if(GeneratorName == "NEUT"){
-    MaxStdHepEntries = GeneratorDependent::kNStdHepNPmax;
     kStdHepIdxPx = GeneratorDependent::kNStdHepIdxPx;
     kStdHepIdxPy = GeneratorDependent::kNStdHepIdxPy;
     kStdHepIdxPz = GeneratorDependent::kNStdHepIdxPz;
     kStdHepIdxE = GeneratorDependent::kNStdHepIdxE;
+
     StdHepN = &GeneratorDependent::NStdHepN;
     StdHepPdg = GeneratorDependent::NStdHepPdg;
-    StdHepP4 = NewPPOf2DArray(GeneratorDependent::NStdHepP4);
+    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::NStdHepP4);
     StdHepStatus = GeneratorDependent::NStdHepStatus;
     TreeName = "nRooTracker";
     Generator = kNEUT;
     std::cout << "Working on NEUT Tree: " << TreeName
       << std::endl;
   } else if(GeneratorName == "GENIE"){
-    MaxStdHepEntries = GeneratorDependent::kGStdHepNPmax;
     kStdHepIdxPx = GeneratorDependent::kGStdHepIdxPx;
     kStdHepIdxPy = GeneratorDependent::kGStdHepIdxPy;
     kStdHepIdxPz = GeneratorDependent::kGStdHepIdxPz;
@@ -157,7 +91,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
 
     StdHepN = &GeneratorDependent::GStdHepN;
     StdHepPdg = GeneratorDependent::GStdHepPdg;
-    StdHepP4 = NewPPOf2DArray(GeneratorDependent::GStdHepP4);
+    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
     StdHepStatus = GeneratorDependent::GStdHepStatus;
     TreeName = "gRooTracker";
     Generator = kGENIE;
@@ -172,17 +106,17 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
   return true;
 }
 
-void ProcessRootrackerToTransversityVariables(
+int ProcessRootrackerToTransversityVariables(
   const char* InputName,
   const char* OutputName="pure_sim_transversity_variables.root",
   std::string GeneratorName="NEUT",
   long long MaxEntries=-1){
 
   if(!SetUpGeneratorDependence(GeneratorName)){
-    return;
+    return 1;
   }
 
-  RooTrackerChain = new TChain(TreeName.c_str());
+  TChain* RooTrackerChain = new TChain(TreeName.c_str());
   RooTrackerChain->SetDirectory(0);
 
   RooTrackerChain->Add(InputName);
@@ -217,43 +151,47 @@ void ProcessRootrackerToTransversityVariables(
     case kInvalid:
     default:{
       std::cerr << "This really shouldn't happen." << std::endl;
-      return;
+      return 1;
       break;
     }
   }
 
 
-  TFile* outFile = new TFile(OutputName,"RECREATE");
+  TFile* outFile = new TFile(OutputName,"CREATE");
+  if(!outFile->IsOpen()){
+    std::cout << "Failed to open: " << OutputName << std::endl;
+    return 2;
+  }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
   CCQEFSITransversity* OutInfoCCQEFSI = 0;
-  outTreePureSim->Branch("CCQEFSITransversity",&OutInfoCCQEFSI);
+  outTreePureSim->Branch("CCQEFSITransversity", &OutInfoCCQEFSI);
 
-  // PionProductionTransversity* OutInfoPionProduction = 0;
-  // outTreePureSim->Branch("PionProductionTransversity",&OutInfoPionProduction);
+  PionProductionTransversity* OutInfoPionProduction = 0;
+  outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :
     (std::min(MaxEntries, RooTrackerChain->GetEntries()));
 
   for(long long i = 0; i < doEntries; ++i){
-
-    if(!i && (VERBOSE > 0)){
-      std::cout << "Getting first entry" << std::endl;
-    }
     RooTrackerChain->GetEntry(i);
-    if(!i && (VERBOSE > 0)){
-      std::cout << "Got first entry" << std::endl;
-    }
 
-    if(i && !(i%10000)){
+    OutInfoCCQEFSI->Reset();
+    OutInfoPionProduction->Reset();
+
+    if(i && !(i%5000)){
       std::cout << "On entry: " << i << std::endl;
     }
 
     switch(Generator){
       case kNEUT:{
-        // NeutConventionReactionCode = 1;
-        str2int(NeutConventionReactionCode,GeneratorDependent::NeutReacCode->Data());
+        if(TransversityUtils::str2int(NeutConventionReactionCode,
+                  GeneratorDependent::NeutReacCode->Data())
+          != TransversityUtils::STRINT_SUCCESS){
+          std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
+            GeneratorDependent::NeutReacCode->Data() << std::endl;
+        }
         break;
       }
       case kGENIE:{
@@ -268,23 +206,20 @@ void ProcessRootrackerToTransversityVariables(
     }
 
     OutInfoCCQEFSI->SetNeutConventionReactionCode(NeutConventionReactionCode);
+    OutInfoPionProduction->\
+      SetNeutConventionReactionCode(NeutConventionReactionCode);
 
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
       OutInfoCCQEFSI->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
-      // OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
-      //   StdHepStatus[partNum], StdHepP4[partNum]);
+      OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
+        StdHepStatus[partNum], StdHepP4[partNum]);
     }
     OutInfoCCQEFSI->Finalise();
+    OutInfoPionProduction->Finalise();
 
-    if((VERBOSE>1) ||
-       ( (NeutConventionReactionCode==1) &&
-         ( ((VERBOSE>0) && (OutInfoCCQEFSI->NProtons==0)) ||
-           ((VERBOSE>0) && (OutInfoCCQEFSI->HMProtonMomentum < 1E-8))
-         )
-       )
-      ){
-      std::cout << "%%%%%%(NProtons==" << (OutInfoCCQEFSI->NProtons) << "),  "
+    if((VERBOSE>1)){
+      std::cout << "(NProtons==" << (OutInfoCCQEFSI->NProtons) << "),  "
         << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
         << OutInfoCCQEFSI->HMProtonMomentum << "): " << std::endl;
       std::cout << "NParticles: " << (*StdHepN) << " - ("
@@ -297,15 +232,12 @@ void ProcessRootrackerToTransversityVariables(
     }
 
     outTreePureSim->Fill();
-
   }
-  std::cout << "Writing tree..." << std::endl;
   outTreePureSim->Write();
-  std::cout << "Writing file..." << std::endl;
   outFile->Write();
-  std::cout << "Done." << std::endl;
   outFile->Close();
-  std::cout << "Shut." << std::endl;
+
+  delete [] StdHepP4;
 }
 
 void SayUsage(char const *runcmd){
@@ -338,9 +270,12 @@ int main(int argc, char* argv[]){
   if(argc >= 5){
     str2int(MaxEntries,argv[4]);
   }
-  ProcessRootrackerToTransversityVariables(InputName,
-                                            OutputName,
-                                            GeneratorName,
-                                            MaxEntries);
+  if(argc >= 6){
+    str2int(VERBOSE,argv[5]);
+  }
+  return ProcessRootrackerToTransversityVariables(InputName,
+                                                  OutputName,
+                                                  GeneratorName,
+                                                  MaxEntries);
 
 }
