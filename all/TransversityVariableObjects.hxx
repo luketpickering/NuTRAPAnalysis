@@ -3,6 +3,8 @@
 #include "TObject.h"
 #include "TLorentzVector.h"
 
+#include "TransversityUtils.hxx"
+
 struct PartStruct {
   PartStruct(){
     Reset();
@@ -25,11 +27,16 @@ private:
   PartStruct HMProton; //!
   PartStruct FirstProton; //!
 
+  TransversityUtils::Generators Gen; //!
+
 public:
-  CCQEFSITransversity();
+  CCQEFSITransversity(TransversityUtils::Generators gen);
 
   Double_t DeltaPhiT_HMProton;
   Double_t DeltaPhiT_FirstProton;
+
+  Double_t DeltaPhiT_HMProton_deg;
+  Double_t DeltaPhiT_FirstProton_deg;
 
   Int_t NeutConventionReactionCode;
 
@@ -52,12 +59,18 @@ public:
   Int_t FirstProtonPDG;
 
   TVector3 MuonDirection;
+  Double_t MuonMomentum_MeV;
+
   TVector3 HMProtonDirection;
   TVector3 FirstProtonDirection;
-  Double_t HMProtonMomentum;
-  Double_t FirstProtonMomentum;
+
+  Double_t HMProtonMomentum_MeV;
+  Double_t FirstProtonMomentum_MeV;
 
   TVector3 MuonPt;
+
+  TVector3 HMProtonPt;
+  TVector3 FirstProtonPt;
 
   Int_t IncNeutrinoPDG;
   TLorentzVector IncNeutrinoMmtm;
@@ -93,12 +106,16 @@ private:
   PartStruct MuonNeutrino; //!
   PartStruct HMPiPlus; //!
   PartStruct FirstPiPlus; //!
+  TransversityUtils::Generators Gen; //!
 
 public:
-  PionProductionTransversity();
+  PionProductionTransversity(TransversityUtils::Generators gen);
 
   Double_t DeltaPhiT_FirstPiPlus;
   Double_t DeltaPhiT_HMPiPlus;
+
+  Double_t DeltaPhiT_FirstPiPlus_deg;
+  Double_t DeltaPhiT_HMPiPlus_deg;
 
   Int_t NeutConventionReactionCode;
 
@@ -122,10 +139,14 @@ public:
   TVector3 MuonDirection;
   TVector3 HMPiPlusDirection;
   TVector3 FirstPiPlusDirection;
-  Double_t HMPiPlusMomentum;
-  Double_t FirstPiPlusMomentum;
+
+  Double_t MuonMomentum_MeV;
+  Double_t HMPiPlusMomentum_MeV;
+  Double_t FirstPiPlusMomentum_MeV;
 
   TVector3 MuonPt;
+  TVector3 HMPiPlusPt;
+  TVector3 FirstPiPlusPt;
 
   Int_t IncNeutrinoPDG;
   TLorentzVector IncNeutrinoMmtm;

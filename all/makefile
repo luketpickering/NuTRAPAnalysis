@@ -2,9 +2,8 @@ CXX := g++
 RCINT := rootcint
 RC := root-config
 
-TOBJS := TransversityVariableObjects.cxx
+TOBJS := TransversityVariableObjects.cxx TransversityUtils.cxx
 TOBJH := $(TOBJS:.cxx=.hxx)
-UTILHEADER := TransversityUtils.hxx
 TOBJDICTS := $(TOBJS:.cxx=_dict.cxx)
 TDICTHEADERS := $(TOBJS:.cxx=_dict.h)
 TOBJLINKDEFS := $(TOBJS:.cxx=_linkdef.h)
@@ -16,7 +15,7 @@ TARGETSRC := $(TARGET:.exe=.cxx)
 ROOTCFLAGS := `$(RC) --cflags`
 ROOTLDFLAGS := `$(RC) --libs --glibs`
 
-CXXFLAGS := -fPIC $(ROOTCFLAGS) -g
+CXXFLAGS := -fPIC $(ROOTCFLAGS) -g -std=c++11
 LDFLAGS := $(ROOTLDFLAGS) -Wl,-rpath=.
 
 .PHONY: all clean
@@ -29,20 +28,23 @@ all: $(TARGET) tests
 	@echo "to your LD_LIBRARY_PATH."
 	@echo "*********************************************************************"
 
-tests: TransversityUnitTests.cxx $(UTILHEADER)
-	$(CXX) -o TransversityTests.exe $(CXXFLAGS) $(LDFLAGS) TransversityUnitTests.cxx
+tests: TransversityUnitTests.cxx $(TOBJH)
+	$(CXX) -o TransversityTests.exe $(CXXFLAGS) $(LDFLAGS) TransversityUnitTests.cxx TransversityUtils.so
 
-$(TARGET): $(TARGETSRC) $(TOBJSO) $(UTILHEADER)
-	$(CXX) -o $@ -I$(NEUTCLASSDIR) $(CXXFLAGS) $(LDFLAGS) $^
+$(TARGET): $(TARGETSRC) $(TOBJSO) $(TOBJH)
+	$(CXX) -o $@ -I$(NEUTCLASSDIR) $(CXXFLAGS) $(LDFLAGS) $(TARGETSRC) $(TOBJSO)
 
-TransversityVariableObjects_dict.cxx: TransversityVariableObjects.hxx
+TransversityVariableObjects_dict.cxx: TransversityVariableObjects.hxx TransversityUtils.hxx
+	$(RCINT) -f $@ -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
 
-TransversityVariableObjects.so: TransversityVariableObjects.cxx TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h $(UTILHEADER)
-	$(RCINT) -f TransversityVariableObjects_dict.cxx -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
+TransversityVariableObjects.so: TransversityVariableObjects.cxx TransversityVariableObjects_dict.cxx TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h TransversityUtils.hxx
 	$(CXX) $(CXXFLAGS) -shared TransversityVariableObjects.cxx TransversityVariableObjects_dict.cxx -o $@
+
+TransversityUtils.so: TransversityUtils.hxx
+	$(CXX) $(CXXFLAGS) TransversityUtils.cxx -shared -o $@
 
 clean:
 	rm -f $(TOBJDICTS)\
-              $(TDICTHEADERS)\
-              $(TOBJSO)\
-              $(TARGET)\
+        $(TDICTHEADERS)\
+        $(TOBJSO)\
+        $(TARGET)\

@@ -10,21 +10,13 @@
 
 #include "TransversityVariableObjects.hxx"
 
+using namespace TransversityUtils;
+
 namespace GeneratorDependent {
 
-const int kGStdHepNPmax = 350;
+constexpr int kGStdHepNPmax = 350;
 
-const int kGStdHepIdxPx = 0;
-const int kGStdHepIdxPy = 1;
-const int kGStdHepIdxPz = 2;
-const int kGStdHepIdxE  = 3;
-
-const int kNStdHepNPmax = 100;
-
-const int kNStdHepIdxPx = 0;
-const int kNStdHepIdxPy = 1;
-const int kNStdHepIdxPz = 2;
-const int kNStdHepIdxE = 3;
+constexpr int kNStdHepNPmax = 100;
 
 TString* NeutReacCode = 0;
 Int_t NStdHepN;
@@ -47,16 +39,12 @@ namespace {
 
   std::string TreeName="nRooTracker";
 
-  enum Generators {kNEUT,kGENIE,kInvalid};
   Generators Generator = kInvalid;
 
-
-//The following variables are the ones that the thinking code will use to get
-// at the specific generator output.
-  int kStdHepIdxPx = 0;
-  int kStdHepIdxPy = 0;
-  int kStdHepIdxPz = 0;
-  int kStdHepIdxE = 0;
+  constexpr int kStdHepIdxPx = 0;
+  constexpr int kStdHepIdxPy = 1;
+  constexpr int kStdHepIdxPz = 2;
+  constexpr int kStdHepIdxE = 3;
 
   Int_t* StdHepN = 0;
   Int_t* StdHepPdg = 0;
@@ -70,10 +58,6 @@ namespace {
 bool SetUpGeneratorDependence(std::string GeneratorName){
 
   if(GeneratorName == "NEUT"){
-    kStdHepIdxPx = GeneratorDependent::kNStdHepIdxPx;
-    kStdHepIdxPy = GeneratorDependent::kNStdHepIdxPy;
-    kStdHepIdxPz = GeneratorDependent::kNStdHepIdxPz;
-    kStdHepIdxE = GeneratorDependent::kNStdHepIdxE;
 
     StdHepN = &GeneratorDependent::NStdHepN;
     StdHepPdg = GeneratorDependent::NStdHepPdg;
@@ -84,10 +68,6 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
     std::cout << "Working on NEUT Tree: " << TreeName
       << std::endl;
   } else if(GeneratorName == "GENIE"){
-    kStdHepIdxPx = GeneratorDependent::kGStdHepIdxPx;
-    kStdHepIdxPy = GeneratorDependent::kGStdHepIdxPy;
-    kStdHepIdxPz = GeneratorDependent::kGStdHepIdxPz;
-    kStdHepIdxE = GeneratorDependent::kGStdHepIdxE;
 
     StdHepN = &GeneratorDependent::GStdHepN;
     StdHepPdg = GeneratorDependent::GStdHepPdg;
@@ -119,7 +99,13 @@ int ProcessRootrackerToTransversityVariables(
   TChain* RooTrackerChain = new TChain(TreeName.c_str());
   RooTrackerChain->SetDirectory(0);
 
-  RooTrackerChain->Add(InputName);
+  int nFiles = 0, nEntries = 0;
+  if( !(nFiles =RooTrackerChain->Add(InputName)) ||
+      !(nEntries =RooTrackerChain->GetEntries())){
+    std::cout << "[ERROR] Found no files (" << nFiles
+      << ") or entries (" << nEntries  << ")" << std::endl;
+    return 2;
+  }
 
   switch(Generator){
     case kNEUT:{
@@ -151,23 +137,23 @@ int ProcessRootrackerToTransversityVariables(
     case kInvalid:
     default:{
       std::cerr << "This really shouldn't happen." << std::endl;
-      return 1;
+      return 4;
       break;
     }
   }
 
-
   TFile* outFile = new TFile(OutputName,"CREATE");
   if(!outFile->IsOpen()){
     std::cout << "Failed to open: " << OutputName << std::endl;
-    return 2;
+    return 8;
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  CCQEFSITransversity* OutInfoCCQEFSI = 0;
+  CCQEFSITransversity* OutInfoCCQEFSI = new CCQEFSITransversity(Generator);
   outTreePureSim->Branch("CCQEFSITransversity", &OutInfoCCQEFSI);
 
-  PionProductionTransversity* OutInfoPionProduction = 0;
+  PionProductionTransversity* OutInfoPionProduction =
+    new PionProductionTransversity(Generator);
   outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
 
   long long doEntries = (MaxEntries==-1) ?
@@ -180,8 +166,8 @@ int ProcessRootrackerToTransversityVariables(
     OutInfoCCQEFSI->Reset();
     OutInfoPionProduction->Reset();
 
-    if(i && !(i%5000)){
-      std::cout << "On entry: " << i << std::endl;
+    if(!(i%10000)){
+      std::cout << "On entry: " << i  << "/" << doEntries << std::endl;
     }
 
     switch(Generator){
@@ -221,7 +207,7 @@ int ProcessRootrackerToTransversityVariables(
     if((VERBOSE>1)){
       std::cout << "(NProtons==" << (OutInfoCCQEFSI->NProtons) << "),  "
         << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
-        << OutInfoCCQEFSI->HMProtonMomentum << "): " << std::endl;
+        << OutInfoCCQEFSI->HMProtonMomentum_MeV << " [MeV/C]): " << std::endl;
       std::cout << "NParticles: " << (*StdHepN) << " - ("
         << NeutConventionReactionCode << ")" << std::endl;
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
@@ -237,7 +223,12 @@ int ProcessRootrackerToTransversityVariables(
   outFile->Write();
   outFile->Close();
 
+
+  delete RooTrackerChain;
+  delete outFile;
   delete [] StdHepP4;
+  delete OutInfoCCQEFSI;
+  delete OutInfoPionProduction;
 }
 
 void SayUsage(char const *runcmd){
