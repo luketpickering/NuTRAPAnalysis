@@ -16,6 +16,9 @@ MuonProtonTransversity::MuonProtonTransversity(
   TransversityUtils::Generators gen){
   Reset();
   Gen = gen;
+  if((Gen==TransversityUtils::kGENIE) || (Gen==TransversityUtils::kNuWro)){
+    IsInGev = true;
+  } else { IsInGev = false; }
 }
 
 void MuonProtonTransversity::HandleProton(TLorentzVector &StdHepPTLV,
@@ -143,7 +146,7 @@ void MuonProtonTransversity::Finalise(){
   HMProtonMomentum_MeV = HMProton.Momentum;
   FirstProtonMomentum_MeV = FirstProton.Momentum;
 
-  if(Gen == TransversityUtils::kGENIE){
+  if(IsInGev){
     MuonMomentum_MeV *= GeVToMeV;
     HMProtonMomentum_MeV *= GeVToMeV;
     FirstProtonMomentum_MeV *= GeVToMeV;
@@ -170,7 +173,7 @@ void MuonProtonTransversity::Finalise(){
   FirstProtonPt_MeV = TransversityUtils::GetVectorInTPlane(
     FirstProton.FourMomentum.Vect(), IncNeutrinoMmtm.Vect());
 
-  if(Gen == TransversityUtils::kGENIE){
+  if(IsInGev){
     MuonPt_MeV *= GeVToMeV;
     HMProtonPt_MeV *= GeVToMeV;
     FirstProtonPt_MeV *= GeVToMeV;
@@ -255,6 +258,9 @@ PionProductionTransversity::PionProductionTransversity(
   TransversityUtils::Generators gen){
   Reset();
   Gen = gen;
+  if((Gen==TransversityUtils::kGENIE) || (Gen==TransversityUtils::kNuWro)){
+    IsInGev = true;
+  } else { IsInGev = false; }
 }
 
 void PionProductionTransversity::HandlePiPlus(TLorentzVector &StdHepPTLV,
@@ -381,7 +387,7 @@ void PionProductionTransversity::Finalise(){
   HMPiPlusMomentum_MeV = HMPiPlus.Momentum;
   FirstPiPlusMomentum_MeV = FirstPiPlus.Momentum;
 
-  if(Gen == TransversityUtils::kGENIE){
+  if(IsInGev){
     MuonMomentum_MeV *= GeVToMeV;
     HMPiPlusMomentum_MeV *= GeVToMeV;
     FirstPiPlusMomentum_MeV *= GeVToMeV;
@@ -409,7 +415,7 @@ void PionProductionTransversity::Finalise(){
     TransversityUtils::GetVectorInTPlane(HMPiPlus.FourMomentum.Vect(),
       MuonNeutrino.FourMomentum.Vect());
 
-  if(Gen == TransversityUtils::kGENIE){
+  if(IsInGev){
     MuonPt_MeV *= GeVToMeV;
     FirstPiPlusPt_MeV *= GeVToMeV;
     HMPiPlusPt_MeV *= GeVToMeV;

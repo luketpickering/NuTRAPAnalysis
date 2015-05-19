@@ -28,6 +28,7 @@ private:
   PartStruct FirstProton; //!
 
   TransversityUtils::Generators Gen; //!
+  bool IsInGev; //!
 
 public:
   MuonProtonTransversity(TransversityUtils::Generators gen);
@@ -118,6 +119,7 @@ private:
   PartStruct HMPiPlus; //!
   PartStruct FirstPiPlus; //!
   TransversityUtils::Generators Gen; //!
+  bool IsInGev; //!
 
 public:
   PionProductionTransversity(TransversityUtils::Generators gen);

@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TChain.h"
+#include "TObjString.h"
 
 #include "TransversityUtils.hxx"
 
@@ -18,11 +19,19 @@ constexpr int kGStdHepNPmax = 350;
 
 constexpr int kNStdHepNPmax = 100;
 
+constexpr int kNuStdHepNPmax = 4000;
+
 TString* NeutReacCode = 0;
 Int_t NStdHepN;
 Int_t NStdHepPdg[kNStdHepNPmax];
 Int_t NStdHepStatus[kNStdHepNPmax];
 Double_t NStdHepP4[kNStdHepNPmax][4];
+
+TObjString* NuWroEvtCode = 0;
+Int_t NuStdHepN;
+Int_t NuStdHepPdg[kNuStdHepNPmax];
+Int_t NuStdHepStatus[kNuStdHepNPmax];
+Double_t NuStdHepP4[kNuStdHepNPmax][4];
 
 Int_t G2NeutEvtCode;
 Int_t GStdHepN;
@@ -57,7 +66,7 @@ namespace {
 
 bool SetUpGeneratorDependence(std::string GeneratorName){
 
-  if(GeneratorName == "NEUT"){
+  if((GeneratorName == "NEUT") || (GeneratorName == "neut")){
 
     StdHepN = &GeneratorDependent::NStdHepN;
     StdHepPdg = GeneratorDependent::NStdHepPdg;
@@ -67,7 +76,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
     Generator = kNEUT;
     std::cout << "Working on NEUT Tree: " << TreeName
       << std::endl;
-  } else if(GeneratorName == "GENIE"){
+  } else if((GeneratorName == "GENIE") || (GeneratorName == "genie")){
 
     StdHepN = &GeneratorDependent::GStdHepN;
     StdHepPdg = GeneratorDependent::GStdHepPdg;
@@ -76,6 +85,17 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
     TreeName = "gRooTracker";
     Generator = kGENIE;
     std::cout << "Working on GENIE Tree: " << TreeName
+      << std::endl;
+  } else if((GeneratorName == "NuWro") || (GeneratorName == "nuwro") ||
+      (GeneratorName == "NUWRO")){
+
+    StdHepN = &GeneratorDependent::NuStdHepN;
+    StdHepPdg = GeneratorDependent::NuStdHepPdg;
+    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::NuStdHepP4);
+    StdHepStatus = GeneratorDependent::NuStdHepStatus;
+    TreeName = "nRooTracker";
+    Generator = kNuWro;
+    std::cout << "Working on NuWro Tree: " << TreeName
       << std::endl;
   } else {
     std::cout << "Unknown Generator string: " << GeneratorName
@@ -134,6 +154,19 @@ int ProcessRootrackerToTransversityVariables(
         GeneratorDependent::GStdHepStatus);
       break;
     }
+    case kNuWro:{
+      RooTrackerChain->SetBranchAddress("EvtCode",
+        &GeneratorDependent::NuWroEvtCode);
+      RooTrackerChain->SetBranchAddress("StdHepN",
+        &GeneratorDependent::NuStdHepN);
+      RooTrackerChain->SetBranchAddress("StdHepPdg",
+        GeneratorDependent::NuStdHepPdg);
+      RooTrackerChain->SetBranchAddress("StdHepP4",
+        GeneratorDependent::NuStdHepP4);
+      RooTrackerChain->SetBranchAddress("StdHepStatus",
+        GeneratorDependent::NuStdHepStatus);
+      break;
+    }
     case kInvalid:
     default:{
       std::cerr << "This really shouldn't happen." << std::endl;
@@ -171,6 +204,15 @@ int ProcessRootrackerToTransversityVariables(
     }
 
     switch(Generator){
+      case kNuWro:{
+        if(TransversityUtils::str2int(NeutConventionReactionCode,
+                  GeneratorDependent::NuWroEvtCode->String().Data())
+          != TransversityUtils::STRINT_SUCCESS){
+          std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
+            GeneratorDependent::NuWroEvtCode->String().Data() << std::endl;
+        }
+        break;
+      }
       case kNEUT:{
         if(TransversityUtils::str2int(NeutConventionReactionCode,
                   GeneratorDependent::NeutReacCode->Data())

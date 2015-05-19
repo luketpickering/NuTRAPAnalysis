@@ -11,7 +11,7 @@
 
 namespace TransversityUtils {
 
-enum Generators {kNEUT,kGENIE,kInvalid};
+enum Generators {kNEUT,kGENIE,kNuWro,kInvalid};
 
 //I guess that the pointer array in a statically
 //allocated 2D array shouldn't change, this is probably alright.
