@@ -8,8 +8,7 @@
 
 using namespace TransversityUtils;
 
-int main(){
-
+void Str2Int_Tests(){
 /************************************str2int***********************************/
   char const * word = "hello";
   char const * neg = "-53";
@@ -40,13 +39,15 @@ int main(){
 
   std::cout <<
 "*******************************************************************************"
-"\n"
+"**\n"
 "******************************PASSED str2int tests*****************************"
-"\n"
+"**\n"
 "*******************************************************************************"
-  << std::endl;
+"**"  << std::endl;
 /******************************************************************************/
+}
 
+void GetVectorInTPlane_Tests(){
 /*******************************GetVectorInTPlane*******************************/
   TVector3 norm1(0,0,1);
   TVector3 norm2(1,1,1);
@@ -81,14 +82,16 @@ int main(){
 
   std::cout <<
 "*******************************************************************************"
-"\n"
+"**\n"
 "***********************PASSED GetVectorInTPlane tests**************************"
-"\n"
+"**\n"
 "*******************************************************************************"
-  << std::endl;
+"**"  << std::endl;
 
 /******************************************************************************/
+}
 
+void GetDeltaPhiT_Tests(){
 /***********************************GetDeltaPhiT*******************************/
   TVector3 norm1_dphi_t(0,0,1);
 
@@ -113,12 +116,73 @@ int main(){
 
   std::cout <<
 "*******************************************************************************"
-"\n"
+"**\n"
 "**************************PASSED GetDeltaPhiT tests****************************"
-"\n"
+"**\n"
 "*******************************************************************************"
-  << std::endl;
+"**"  << std::endl;
 
+}
 
+void GetDeltaPT_Tests(){
+/***********************************GetDeltaPhiT*******************************/
+  TVector3 norm1_dphi_t(0,0,1);
+
+  TVector3 TestV1_dphi_t(1,0,0);
+  TVector3 TestV2_dphi_t(0,1,0);
+  TVector3 TestV3_dphi_t(-1,0,0);
+  TVector3 TestV4_dphi_t(0,-1,0);
+  TVector3 TestV5_dphi_t(1,2,1);
+
+  TVector3 Res1 = GetDeltaPT(TestV1_dphi_t,TestV1_dphi_t,norm1_dphi_t);
+  assert(Res1 == TVector3(2,0,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  TVector3 Res2 = GetDeltaPT(TestV1_dphi_t,TestV2_dphi_t,norm1_dphi_t);
+  assert(Res2 == TVector3(1,1,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  TVector3 Res3 = GetDeltaPT(TestV1_dphi_t,TestV3_dphi_t,norm1_dphi_t);
+  assert(Res3 == TVector3(0,0,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  TVector3 Res4 = GetDeltaPT(TestV1_dphi_t,TestV4_dphi_t,norm1_dphi_t);
+  assert(Res4 == TVector3(1,-1,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  TVector3 Res5 = GetDeltaPT(TestV1_dphi_t,TestV5_dphi_t,norm1_dphi_t);
+  assert(Res5 == TVector3(2,2,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  TVector3 Res6 = GetDeltaPT(TestV3_dphi_t,TestV5_dphi_t,norm1_dphi_t);
+  assert(Res6 == TVector3(0,2,0));
+  std::cout << "[PASSED] GetDeltaPT test #1" << std::endl;
+
+  std::cout <<
+"*******************************************************************************"
+"**\n"
+"****************************PASSED GetDeltaPT tests****************************"
+"**\n"
+"*******************************************************************************"
+"**" << std::endl;
+
+}
+
+int main(){
+  std::cout <<
+"*******************************************************************************"
+"**\n"
+"*******************************************************************************"
+"**\n"
+"**********************************TESTS****************************************"
+"**\n"
+"*******************************************************************************"
+"**\n"
+"*******************************************************************************"
+"**"  << std::endl;
+  Str2Int_Tests();
+  GetVectorInTPlane_Tests();
+  GetDeltaPhiT_Tests();
+  GetDeltaPT_Tests();
   return 0;
 }

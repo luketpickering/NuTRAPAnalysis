@@ -149,8 +149,8 @@ int ProcessRootrackerToTransversityVariables(
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  CCQEFSITransversity* OutInfoCCQEFSI = new CCQEFSITransversity(Generator);
-  outTreePureSim->Branch("CCQEFSITransversity", &OutInfoCCQEFSI);
+  MuonProtonTransversity* OutInfoCCQEFSI = new MuonProtonTransversity(Generator);
+  outTreePureSim->Branch("MuonProtonTransversity", &OutInfoCCQEFSI);
 
   PionProductionTransversity* OutInfoPionProduction =
     new PionProductionTransversity(Generator);

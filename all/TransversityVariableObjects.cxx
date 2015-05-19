@@ -9,15 +9,16 @@ constexpr int kStdHepIdxPz = 2;
 constexpr int kStdHepIdxE = 3;
 }
 
-ClassImp(CCQEFSITransversity);
+ClassImp(MuonProtonTransversity);
 ClassImp(PionProductionTransversity);
 
-CCQEFSITransversity::CCQEFSITransversity(TransversityUtils::Generators gen){
+MuonProtonTransversity::MuonProtonTransversity(
+  TransversityUtils::Generators gen){
   Reset();
   Gen = gen;
 }
 
-void CCQEFSITransversity::HandleProton(TLorentzVector &StdHepPTLV,
+void MuonProtonTransversity::HandleProton(TLorentzVector &StdHepPTLV,
   Double_t &StdHepP3Mod){
 
   if(!FirstProton.PDG){
@@ -35,7 +36,7 @@ void CCQEFSITransversity::HandleProton(TLorentzVector &StdHepPTLV,
   }
 }
 
-bool CCQEFSITransversity::HandleStdHepParticle(
+bool MuonProtonTransversity::HandleStdHepParticle(
   UInt_t &StdHepPosition,
   int &StdHepPdg,
   int &StdHepStatus,
@@ -124,9 +125,9 @@ bool CCQEFSITransversity::HandleStdHepParticle(
   return true;
 
 }
-void CCQEFSITransversity::Finalise(){
+void MuonProtonTransversity::Finalise(){
 
-  constexpr Float_t GeVToMeV = 1.0/1000.0;
+  constexpr Float_t GeVToMeV = 1000.0;
   constexpr Float_t RadToDeg = 180.0/M_PI;
 
   MuonPDG = Muon.PDG;
@@ -159,29 +160,56 @@ void CCQEFSITransversity::Finalise(){
   DeltaPhiT_HMProton_deg = DeltaPhiT_HMProton * RadToDeg;
   DeltaPhiT_FirstProton_deg = DeltaPhiT_FirstProton * RadToDeg;
 
-  MuonPt = TransversityUtils::GetVectorInTPlane(Muon.FourMomentum.Vect(),
+  MuonPt_MeV = TransversityUtils::GetVectorInTPlane(Muon.FourMomentum.Vect(),
     IncNeutrinoMmtm.Vect());
 
-  HMProtonPt = TransversityUtils::GetVectorInTPlane(HMProton.FourMomentum.Vect(),
-    IncNeutrinoMmtm.Vect());
+  HMProtonPt_MeV =
+    TransversityUtils::GetVectorInTPlane(HMProton.FourMomentum.Vect(),
+      IncNeutrinoMmtm.Vect());
 
-  FirstProtonPt = TransversityUtils::GetVectorInTPlane(
+  FirstProtonPt_MeV = TransversityUtils::GetVectorInTPlane(
     FirstProton.FourMomentum.Vect(), IncNeutrinoMmtm.Vect());
 
   if(Gen == TransversityUtils::kGENIE){
-    MuonPt *= GeVToMeV;
-    HMProtonPt *= GeVToMeV;
-    FirstProtonPt *= GeVToMeV;
+    MuonPt_MeV *= GeVToMeV;
+    HMProtonPt_MeV *= GeVToMeV;
+    FirstProtonPt_MeV *= GeVToMeV;
   }
 
+  DeltaPT_HMProton_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
+                                                        HMProtonPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+  DeltaPT_FirstProton_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
+                                                        FirstProtonPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+
+  DeltaAlphaT_HMProton = TransversityUtils::GetDeltaAlphaT(MuonPt_MeV,
+                                                        HMProtonPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+  DeltaAlphaT_FirstProton = TransversityUtils::GetDeltaAlphaT(MuonPt_MeV,
+                                                        FirstProtonPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+
+  DeltaAlphaT_HMProton_deg = DeltaAlphaT_HMProton*RadToDeg;
+  DeltaAlphaT_FirstProton_deg = DeltaAlphaT_FirstProton*RadToDeg;
+
 }
-void CCQEFSITransversity::Reset(){
+void MuonProtonTransversity::Reset(){
 
   DeltaPhiT_HMProton = 0;
   DeltaPhiT_FirstProton = 0;
 
   DeltaPhiT_HMProton_deg = 0;
   DeltaPhiT_FirstProton_deg = 0;
+
+  DeltaPT_HMProton_MeV = TVector3(0,0,0);
+  DeltaPT_FirstProton_MeV = TVector3(0,0,0);
+
+  DeltaAlphaT_HMProton = 0;
+  DeltaAlphaT_FirstProton = 0;
+
+  DeltaAlphaT_HMProton_deg = 0;
+  DeltaAlphaT_FirstProton_deg = 0;
 
   NeutConventionReactionCode = 0;
 
@@ -207,9 +235,9 @@ void CCQEFSITransversity::Reset(){
   HMProtonMomentum_MeV = 0;
   FirstProtonMomentum_MeV = 0;
 
-  MuonPt = TVector3(0,0,0);
-  HMProtonPt = TVector3(0,0,0);
-  FirstProtonPt = TVector3(0,0,0);
+  MuonPt_MeV = TVector3(0,0,0);
+  HMProtonPt_MeV = TVector3(0,0,0);
+  FirstProtonPt_MeV = TVector3(0,0,0);
 
   IncNeutrinoPDG = 0;
   IncNeutrinoMmtm = TLorentzVector(0,0,0,0);
@@ -338,7 +366,7 @@ bool PionProductionTransversity::HandleStdHepParticle(
 }
 void PionProductionTransversity::Finalise(){
 
-  constexpr Float_t GeVToMeV = 1.0/1000.0;
+  constexpr Float_t GeVToMeV = 1000.0;
   constexpr Float_t RadToDeg = 180.0/M_PI;
 
   MuonPDG = Muon.PDG;
@@ -370,27 +398,57 @@ void PionProductionTransversity::Finalise(){
   DeltaPhiT_HMPiPlus_deg = DeltaPhiT_HMPiPlus * RadToDeg;
   DeltaPhiT_FirstPiPlus_deg = DeltaPhiT_FirstPiPlus * RadToDeg;
 
-  MuonPt = TransversityUtils::GetVectorInTPlane(Muon.FourMomentum.Vect(),
+  MuonPt_MeV = TransversityUtils::GetVectorInTPlane(Muon.FourMomentum.Vect(),
     MuonNeutrino.FourMomentum.Vect());
 
-  FirstPiPlusPt = TransversityUtils::GetVectorInTPlane(FirstPiPlus.FourMomentum.Vect(),
-    MuonNeutrino.FourMomentum.Vect());
+  FirstPiPlusPt_MeV =
+    TransversityUtils::GetVectorInTPlane(FirstPiPlus.FourMomentum.Vect(),
+      MuonNeutrino.FourMomentum.Vect());
 
-  HMPiPlusPt = TransversityUtils::GetVectorInTPlane(HMPiPlus.FourMomentum.Vect(),
-    MuonNeutrino.FourMomentum.Vect());
+  HMPiPlusPt_MeV =
+    TransversityUtils::GetVectorInTPlane(HMPiPlus.FourMomentum.Vect(),
+      MuonNeutrino.FourMomentum.Vect());
 
   if(Gen == TransversityUtils::kGENIE){
-    MuonPt *= GeVToMeV;
-    FirstPiPlusPt *= GeVToMeV;
-    HMPiPlusPt *= GeVToMeV;
+    MuonPt_MeV *= GeVToMeV;
+    FirstPiPlusPt_MeV *= GeVToMeV;
+    HMPiPlusPt_MeV *= GeVToMeV;
   }
+
+  DeltaPT_HMPiPlus_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
+                                                        HMPiPlusPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+  DeltaPT_FirstPiPlus_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
+                                                        FirstPiPlusPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+
+  DeltaAlphaT_HMPiPlus = TransversityUtils::GetDeltaAlphaT(MuonPt_MeV,
+                                                        HMPiPlusPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+  DeltaAlphaT_FirstPiPlus = TransversityUtils::GetDeltaAlphaT(MuonPt_MeV,
+                                                        FirstPiPlusPt_MeV,
+                                                        IncNeutrinoMmtm.Vect());
+
+  DeltaAlphaT_HMPiPlus_deg = DeltaAlphaT_HMPiPlus*RadToDeg;
+  DeltaAlphaT_FirstPiPlus_deg = DeltaAlphaT_FirstPiPlus*RadToDeg;
+
 }
 void PionProductionTransversity::Reset(){
 
   DeltaPhiT_HMPiPlus = 0;
   DeltaPhiT_FirstPiPlus = 0;
+
   DeltaPhiT_HMPiPlus_deg = 0;
   DeltaPhiT_FirstPiPlus_deg = 0;
+
+  DeltaPT_HMPiPlus_MeV = TVector3(0,0,0);
+  DeltaPT_FirstPiPlus_MeV = TVector3(0,0,0);
+
+  DeltaAlphaT_HMPiPlus = 0;
+  DeltaAlphaT_FirstPiPlus = 0;
+
+  DeltaAlphaT_HMPiPlus_deg = 0;
+  DeltaAlphaT_FirstPiPlus_deg = 0;
 
   NeutConventionReactionCode = 0;
 
@@ -417,10 +475,10 @@ void PionProductionTransversity::Reset(){
   HMPiPlusMomentum_MeV = 0;
   FirstPiPlusMomentum_MeV = 0;
 
-  MuonPt = TVector3(0,0,0);
+  MuonPt_MeV = TVector3(0,0,0);
 
-  FirstPiPlusPt = TVector3(0,0,0);
-  HMPiPlusPt = TVector3(0,0,0);
+  FirstPiPlusPt_MeV = TVector3(0,0,0);
+  HMPiPlusPt_MeV = TVector3(0,0,0);
 
   IncNeutrinoPDG = 0;
   IncNeutrinoMmtm = TLorentzVector(0,0,0,0);
@@ -432,5 +490,4 @@ void PionProductionTransversity::Reset(){
   MuonNeutrino.Reset();
   HMPiPlus.Reset();
   FirstPiPlus.Reset();
-
 }

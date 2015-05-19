@@ -53,19 +53,42 @@ TVector3 GetUnitVectorInTPlane(const TVector3& inp,
   return GetVectorInTPlane(inp,planarNormal).Unit();
 }
 
-Double_t GetDeltaPhiT(TVector3 const &V1,
-  TVector3 const &V2, TVector3 const &Normal,
+Double_t GetDeltaPhiT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal,
   bool PiMinus){
 
-  TVector3 V1_T = GetUnitVectorInTPlane(
-    V1,
+  TVector3 V_lepton_T = GetUnitVectorInTPlane(
+    V_lepton,
     Normal);
 
-  TVector3 V2_T = GetUnitVectorInTPlane(
-    V2,
+  TVector3 V_other_T = GetUnitVectorInTPlane(
+    V_other,
     Normal);
 
-  return PiMinus ? acos(V1_T.Dot(V2_T)) : (M_PI - acos(V1_T.Dot(V2_T))) ;
+  return PiMinus ? acos(V_lepton_T.Dot(V_other_T)) :
+    (M_PI - acos(V_lepton_T.Dot(V_other_T))) ;
+}
+
+TVector3 GetDeltaPT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal){
+
+  TVector3 V_lepton_T = GetVectorInTPlane(
+    V_lepton,
+    Normal);
+
+  TVector3 V_other_T = GetVectorInTPlane(
+    V_other,
+    Normal);
+
+  return V_lepton_T + V_other_T;
+}
+
+Double_t GetDeltaAlphaT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal, bool PiMinus){
+
+  TVector3 DeltaPT = GetDeltaPT(V_lepton,V_other,Normal);
+
+  return GetDeltaPhiT(V_lepton,DeltaPT,Normal,PiMinus);
 }
 
 }

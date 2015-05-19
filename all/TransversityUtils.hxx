@@ -68,9 +68,13 @@ TVector3 GetUnitVectorInTPlane(const TVector3& inp,
 //Get delta phi between V1 and V2 in the plane defined by Normal.
 //PiMinus changes the convention between back-to-back is delta phi t == 0
 // and delta phi t == pi
-Double_t GetDeltaPhiT(TVector3 const &V1,
-  TVector3 const &V2, TVector3 const &Normal,
+Double_t GetDeltaPhiT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal,
   bool PiMinus=false);
+TVector3 GetDeltaPT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal);
+Double_t GetDeltaAlphaT(TVector3 const &V_lepton,
+  TVector3 const &V_other, TVector3 const &Normal, bool PiMinus=false);
 
 } // namespace Transversityutils
 #endif

@@ -19,7 +19,7 @@ struct PartStruct {
   }
 };
 
-struct CCQEFSITransversity : public TObject {
+struct MuonProtonTransversity : public TObject {
 private:
   //Transients
   PartStruct Muon; //!
@@ -30,16 +30,27 @@ private:
   TransversityUtils::Generators Gen; //!
 
 public:
-  CCQEFSITransversity(TransversityUtils::Generators gen);
+  MuonProtonTransversity(TransversityUtils::Generators gen);
 
+//DeltaPhiT
   Double_t DeltaPhiT_HMProton;
   Double_t DeltaPhiT_FirstProton;
 
   Double_t DeltaPhiT_HMProton_deg;
   Double_t DeltaPhiT_FirstProton_deg;
+//DeltaPt
+  TVector3 DeltaPT_HMProton_MeV;
+  TVector3 DeltaPT_FirstProton_MeV;
+//DeltaAlphat
+  Double_t DeltaAlphaT_HMProton;
+  Double_t DeltaAlphaT_FirstProton;
 
+  Double_t DeltaAlphaT_HMProton_deg;
+  Double_t DeltaAlphaT_FirstProton_deg;
+//Generator reaction code
   Int_t NeutConventionReactionCode;
 
+//Final state contents
   Int_t NFinalStateParticles;
 
   Int_t NProtons;
@@ -54,6 +65,7 @@ public:
 
   Int_t NOtherParticles;
 
+//Selected final state protperties
   Int_t MuonPDG;
   Int_t HMProtonPDG;
   Int_t FirstProtonPDG;
@@ -67,14 +79,13 @@ public:
   Double_t HMProtonMomentum_MeV;
   Double_t FirstProtonMomentum_MeV;
 
-  TVector3 MuonPt;
-
-  TVector3 HMProtonPt;
-  TVector3 FirstProtonPt;
-
+  TVector3 MuonPt_MeV;
+  TVector3 HMProtonPt_MeV;
+  TVector3 FirstProtonPt_MeV;
+//Neutrino properties
   Int_t IncNeutrinoPDG;
   TLorentzVector IncNeutrinoMmtm;
-
+//Target Properties
   Int_t TargetPDG;
   Int_t TargetZ;
 
@@ -95,7 +106,7 @@ public:
   void Finalise();
   void Reset();
 
-  ClassDef(CCQEFSITransversity,1);
+  ClassDef(MuonProtonTransversity,1);
 };
 
 struct PionProductionTransversity : public TObject {
@@ -116,6 +127,13 @@ public:
 
   Double_t DeltaPhiT_FirstPiPlus_deg;
   Double_t DeltaPhiT_HMPiPlus_deg;
+
+  TVector3 DeltaPT_HMPiPlus_MeV;
+  TVector3 DeltaPT_FirstPiPlus_MeV;
+  Double_t DeltaAlphaT_HMPiPlus;
+  Double_t DeltaAlphaT_FirstPiPlus;
+  Double_t DeltaAlphaT_HMPiPlus_deg;
+  Double_t DeltaAlphaT_FirstPiPlus_deg;
 
   Int_t NeutConventionReactionCode;
 
@@ -144,9 +162,9 @@ public:
   Double_t HMPiPlusMomentum_MeV;
   Double_t FirstPiPlusMomentum_MeV;
 
-  TVector3 MuonPt;
-  TVector3 HMPiPlusPt;
-  TVector3 FirstPiPlusPt;
+  TVector3 MuonPt_MeV;
+  TVector3 HMPiPlusPt_MeV;
+  TVector3 FirstPiPlusPt_MeV;
 
   Int_t IncNeutrinoPDG;
   TLorentzVector IncNeutrinoMmtm;
