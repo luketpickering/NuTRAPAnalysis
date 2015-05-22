@@ -128,6 +128,34 @@ bool MuonProtonTransversity::HandleStdHepParticle(
   return true;
 
 }
+
+Double_t GetReconNuEnergy(const TVector3 &nudir,
+  const TLorentzVector &mumom, const TLorentzVector &pmom){
+
+  TVector3 m3mom = mumom.Vect();
+  TVector3 p3mom = pmom.Vect();
+
+  Double_t p_tot_p = p3mom.Mag();
+  Double_t p_tot_m = m3mom.Mag();
+  Double_t nudirMag = nudir.Mag();
+
+  Double_t mnangle =
+    TMath::ACos((nudir.Dot(m3mom))/(p_tot_m*nudirMag));
+
+  Double_t EnuRec =
+    p_tot_m*TMath::Cos(mnangle)
+      + sqrt(p_tot_m*TMath::Cos(mnangle)*p_tot_m*TMath::Cos(mnangle)
+        - p_tot_m*p_tot_m + p_tot_p*p_tot_p);
+  return EnuRec;
+}
+
+Double_t GetReconTgtMass(Double_t const &nuE,
+  const TLorentzVector &mumom, const TLorentzVector &pmom){
+  Double_t TgtMass = pmom.E() + mumom.E() - nuE;
+
+  return TgtMass;
+}
+
 void MuonProtonTransversity::Finalise(){
 
   constexpr Float_t GeVToMeV = 1000.0;
@@ -137,6 +165,17 @@ void MuonProtonTransversity::Finalise(){
   HMProtonPDG = HMProton.PDG;
   FirstProtonPDG = FirstProton.PDG;
 
+  if(IsInGev){
+    Muon.Momentum *= GeVToMeV;
+    Muon.FourMomentum *= GeVToMeV;
+    MuonNeutrino.Momentum *= GeVToMeV;
+    MuonNeutrino.FourMomentum *= GeVToMeV;
+    HMProton.Momentum *= GeVToMeV;
+    HMProton.FourMomentum *= GeVToMeV;
+    FirstProton.Momentum *= GeVToMeV;
+    FirstProton.FourMomentum *= GeVToMeV;
+  }
+
   MuonDirection = Muon.FourMomentum.Vect().Unit();
 
   HMProtonDirection  = HMProton.FourMomentum.Vect().Unit();
@@ -145,12 +184,6 @@ void MuonProtonTransversity::Finalise(){
   MuonMomentum_MeV = Muon.Momentum;
   HMProtonMomentum_MeV = HMProton.Momentum;
   FirstProtonMomentum_MeV = FirstProton.Momentum;
-
-  if(IsInGev){
-    MuonMomentum_MeV *= GeVToMeV;
-    HMProtonMomentum_MeV *= GeVToMeV;
-    FirstProtonMomentum_MeV *= GeVToMeV;
-  }
 
   IncNeutrinoPDG = MuonNeutrino.PDG;
   IncNeutrinoMmtm = MuonNeutrino.FourMomentum;
@@ -173,12 +206,6 @@ void MuonProtonTransversity::Finalise(){
   FirstProtonPt_MeV = TransversityUtils::GetVectorInTPlane(
     FirstProton.FourMomentum.Vect(), IncNeutrinoMmtm.Vect());
 
-  if(IsInGev){
-    MuonPt_MeV *= GeVToMeV;
-    HMProtonPt_MeV *= GeVToMeV;
-    FirstProtonPt_MeV *= GeVToMeV;
-  }
-
   DeltaPT_HMProton_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
                                                         HMProtonPt_MeV,
                                                         IncNeutrinoMmtm.Vect());
@@ -196,8 +223,18 @@ void MuonProtonTransversity::Finalise(){
   DeltaAlphaT_HMProton_deg = DeltaAlphaT_HMProton*RadToDeg;
   DeltaAlphaT_FirstProton_deg = DeltaAlphaT_FirstProton*RadToDeg;
 
+  ReconNuEnergy = GetReconNuEnergy(MuonNeutrino.FourMomentum.Vect(),
+                                    Muon.FourMomentum,
+                                    HMProton.FourMomentum);
+  ReconTargetMass = GetReconTgtMass(ReconNuEnergy,
+                                    Muon.FourMomentum,
+                                    HMProton.FourMomentum);
+
 }
 void MuonProtonTransversity::Reset(){
+
+  ReconNuEnergy = 0;
+  ReconTargetMass = 0;
 
   DeltaPhiT_HMProton = 0;
   DeltaPhiT_FirstProton = 0;
@@ -379,6 +416,17 @@ void PionProductionTransversity::Finalise(){
   HMPiPlusPDG = HMPiPlus.PDG;
   FirstPiPlusPDG = FirstPiPlus.PDG;
 
+  if(IsInGev){
+    Muon.Momentum *= GeVToMeV;
+    Muon.FourMomentum *= GeVToMeV;
+    MuonNeutrino.Momentum *= GeVToMeV;
+    MuonNeutrino.FourMomentum *= GeVToMeV;
+    HMPiPlus.Momentum *= GeVToMeV;
+    HMPiPlus.FourMomentum *= GeVToMeV;
+    FirstPiPlus.Momentum *= GeVToMeV;
+    FirstPiPlus.FourMomentum *= GeVToMeV;
+  }
+
   MuonDirection = Muon.FourMomentum.Vect().Unit();
   HMPiPlusDirection = HMPiPlus.FourMomentum.Vect().Unit();
   FirstPiPlusDirection = FirstPiPlus.FourMomentum.Vect().Unit();
@@ -386,12 +434,6 @@ void PionProductionTransversity::Finalise(){
   MuonMomentum_MeV = Muon.Momentum;
   HMPiPlusMomentum_MeV = HMPiPlus.Momentum;
   FirstPiPlusMomentum_MeV = FirstPiPlus.Momentum;
-
-  if(IsInGev){
-    MuonMomentum_MeV *= GeVToMeV;
-    HMPiPlusMomentum_MeV *= GeVToMeV;
-    FirstPiPlusMomentum_MeV *= GeVToMeV;
-  }
 
   IncNeutrinoPDG = MuonNeutrino.PDG;
   IncNeutrinoMmtm = MuonNeutrino.FourMomentum;
@@ -414,12 +456,6 @@ void PionProductionTransversity::Finalise(){
   HMPiPlusPt_MeV =
     TransversityUtils::GetVectorInTPlane(HMPiPlus.FourMomentum.Vect(),
       MuonNeutrino.FourMomentum.Vect());
-
-  if(IsInGev){
-    MuonPt_MeV *= GeVToMeV;
-    FirstPiPlusPt_MeV *= GeVToMeV;
-    HMPiPlusPt_MeV *= GeVToMeV;
-  }
 
   DeltaPT_HMPiPlus_MeV = TransversityUtils::GetDeltaPT(MuonPt_MeV,
                                                         HMPiPlusPt_MeV,

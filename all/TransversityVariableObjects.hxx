@@ -33,6 +33,9 @@ private:
 public:
   MuonProtonTransversity(TransversityUtils::Generators gen);
 
+  Double_t ReconNuEnergy;
+  Double_t ReconTargetMass;
+
 //DeltaPhiT
   Double_t DeltaPhiT_HMProton;
   Double_t DeltaPhiT_FirstProton;
