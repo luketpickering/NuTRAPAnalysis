@@ -7,8 +7,10 @@
 #include "TChain.h"
 #include "TObjString.h"
 
-#include "TransversityUtils.hxx"
+#include "PureGenUtils.hxx"
+#include "CLITools.hxx"
 
+#include "TransversityUtils.hxx"
 #include "TransversityVariableObjects.hxx"
 
 using namespace TransversityUtils;
@@ -16,10 +18,9 @@ using namespace TransversityUtils;
 namespace GeneratorDependent {
 
 constexpr int kGStdHepNPmax = 350;
-
 constexpr int kNStdHepNPmax = 100;
-
 constexpr int kNuStdHepNPmax = 4000;
+constexpr int kGiStdHepNPmax = 100;
 
 TString* NeutReacCode = 0;
 Int_t NStdHepN;
@@ -39,12 +40,19 @@ Int_t GStdHepPdg[kGStdHepNPmax];
 Int_t GStdHepStatus[kGStdHepNPmax];
 Double_t GStdHepP4[kGStdHepNPmax][4];
 
+Int_t Gi2NeutEvtCode;
+Int_t GiStdHepN;
+Int_t GiStdHepPdg[kGiStdHepNPmax];
+Int_t GiStdHepStatus[kGiStdHepNPmax];
+Double_t GiStdHepP4[kGiStdHepNPmax][4];
+
 } // namespace GeneratorDependent
 
 
 //There'll be no name collisions in my DOJO, might be binary bloat though...
 namespace {
-  int VERBOSE = 1;
+  int Verbosity = 1;
+  bool OutputInGev;
 
   std::string TreeName="nRooTracker";
 
@@ -70,7 +78,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
 
     StdHepN = &GeneratorDependent::NStdHepN;
     StdHepPdg = GeneratorDependent::NStdHepPdg;
-    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::NStdHepP4);
+    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NStdHepP4);
     StdHepStatus = GeneratorDependent::NStdHepStatus;
     TreeName = "nRooTracker";
     Generator = kNEUT;
@@ -80,7 +88,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
 
     StdHepN = &GeneratorDependent::GStdHepN;
     StdHepPdg = GeneratorDependent::GStdHepPdg;
-    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
+    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
     StdHepStatus = GeneratorDependent::GStdHepStatus;
     TreeName = "gRooTracker";
     Generator = kGENIE;
@@ -91,11 +99,22 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
 
     StdHepN = &GeneratorDependent::NuStdHepN;
     StdHepPdg = GeneratorDependent::NuStdHepPdg;
-    StdHepP4 = TransversityUtils::NewPPOf2DArray(GeneratorDependent::NuStdHepP4);
+    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NuStdHepP4);
     StdHepStatus = GeneratorDependent::NuStdHepStatus;
     TreeName = "nRooTracker";
     Generator = kNuWro;
     std::cout << "Working on NuWro Tree: " << TreeName
+      << std::endl;
+  } else if((GeneratorName == "GiBUU") || (GeneratorName == "gibuu") ||
+      (GeneratorName == "GIBUU")){
+
+    StdHepN = &GeneratorDependent::GiStdHepN;
+    StdHepPdg = GeneratorDependent::GiStdHepPdg;
+    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GiStdHepP4);
+    StdHepStatus = GeneratorDependent::GiStdHepStatus;
+    TreeName = "giRooTracker";
+    Generator = kGiBUU;
+    std::cout << "Working on GiBUU Tree: " << TreeName
       << std::endl;
   } else {
     std::cout << "Unknown Generator string: " << GeneratorName
@@ -167,6 +186,19 @@ int ProcessRootrackerToTransversityVariables(
         GeneratorDependent::NuStdHepStatus);
       break;
     }
+    case kGiBUU:{
+      RooTrackerChain->SetBranchAddress("GiBUU2NeutCode",
+        &GeneratorDependent::Gi2NeutEvtCode);
+      RooTrackerChain->SetBranchAddress("StdHepN",
+        &GeneratorDependent::GiStdHepN);
+      RooTrackerChain->SetBranchAddress("StdHepPdg",
+        GeneratorDependent::GiStdHepPdg);
+      RooTrackerChain->SetBranchAddress("StdHepP4",
+        GeneratorDependent::GiStdHepP4);
+      RooTrackerChain->SetBranchAddress("StdHepStatus",
+        GeneratorDependent::GiStdHepStatus);
+      break;
+    }
     case kInvalid:
     default:{
       std::cerr << "This really shouldn't happen." << std::endl;
@@ -182,11 +214,12 @@ int ProcessRootrackerToTransversityVariables(
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  MuonProtonTransversity* OutInfoCCQEFSI = new MuonProtonTransversity(Generator);
+  MuonProtonTransversity* OutInfoCCQEFSI =
+    new MuonProtonTransversity(OutputInGev);
   outTreePureSim->Branch("MuonProtonTransversity", &OutInfoCCQEFSI);
 
   PionProductionTransversity* OutInfoPionProduction =
-    new PionProductionTransversity(Generator);
+    new PionProductionTransversity(OutputInGev);
   outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
 
   long long doEntries = (MaxEntries==-1) ?
@@ -205,18 +238,18 @@ int ProcessRootrackerToTransversityVariables(
 
     switch(Generator){
       case kNuWro:{
-        if(TransversityUtils::str2int(NeutConventionReactionCode,
+        if(PGUtils::str2int(NeutConventionReactionCode,
                   GeneratorDependent::NuWroEvtCode->String().Data())
-          != TransversityUtils::STRINT_SUCCESS){
+          != PGUtils::STRINT_SUCCESS){
           std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
             GeneratorDependent::NuWroEvtCode->String().Data() << std::endl;
         }
         break;
       }
       case kNEUT:{
-        if(TransversityUtils::str2int(NeutConventionReactionCode,
+        if(PGUtils::str2int(NeutConventionReactionCode,
                   GeneratorDependent::NeutReacCode->Data())
-          != TransversityUtils::STRINT_SUCCESS){
+          != PGUtils::STRINT_SUCCESS){
           std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
             GeneratorDependent::NeutReacCode->Data() << std::endl;
         }
@@ -224,6 +257,10 @@ int ProcessRootrackerToTransversityVariables(
       }
       case kGENIE:{
         NeutConventionReactionCode = GeneratorDependent::G2NeutEvtCode;
+        break;
+      }
+      case kGiBUU:{
+        NeutConventionReactionCode = GeneratorDependent::Gi2NeutEvtCode;
         break;
       }
       case kInvalid:
@@ -246,7 +283,7 @@ int ProcessRootrackerToTransversityVariables(
     OutInfoCCQEFSI->Finalise();
     OutInfoPionProduction->Finalise();
 
-    if((VERBOSE>1)){
+    if((Verbosity>1)){
       std::cout << "(NProtons==" << (OutInfoCCQEFSI->NProtons) << "),  "
         << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
         << OutInfoCCQEFSI->HMProtonMomentum_MeV << " [MeV/C]): " << std::endl;
@@ -255,7 +292,7 @@ int ProcessRootrackerToTransversityVariables(
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
         std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
           << " (Status==" << StdHepStatus[partNum] << ") "
-          << PrintArray(StdHepP4[partNum],4) << std::endl;
+          << PGUtils::PrintArray(StdHepP4[partNum],4) << std::endl;
       }
     }
 
@@ -282,33 +319,83 @@ void SayUsage(char const *runcmd){
   << std::endl;
 }
 
-int main(int argc, char* argv[]){
+namespace {
+std::string InputName;
+std::string OutputName="TransverseVars.root";
+std::string GeneratorName="NEUT";
+long MaxEntries=-1;
 
+void SetOpts(){
+  CLIArgs::OptSpec.emplace_back("-h","--help", false,
+    [&] (std::string const &opt) -> bool {
+      CLIArgs::SayRunLike();
+      exit(0);
+    });
 
-  if(argc < 2){
-    SayUsage(argv[0]);
+  CLIArgs::OptSpec.emplace_back("-i", "--input-file", true,
+    [&] (std::string const &opt) -> bool {
+      std::cout << "\tReading from file descriptor : " << opt << std::endl;
+      InputName = opt;
+      return true;
+    }, true,[](){},"<TChain::Add descriptor>");
+
+  CLIArgs::OptSpec.emplace_back("-o", "--output-file", true,
+    [&] (std::string const &opt) -> bool {
+      std::cout << "\tWriting to File: " << opt << std::endl;
+      OutputName = opt;
+      return true;
+    }, false,
+    [&](){OutputName = "TransverseVars.root";},
+    "<File Name>{default=TransverseVars.root}");
+
+  CLIArgs::OptSpec.emplace_back("-n", "--nentries", true,
+    [&] (std::string const &opt) -> bool {
+      long vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        if(vbhold != -1){
+          std::cout << "Looking at, at most, " << vbhold << " entries."
+            << std::endl;
+        }
+        MaxEntries = vbhold;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){MaxEntries = -1;}, "<-1>: Read all {default=-1}");
+
+  CLIArgs::OptSpec.emplace_back("-v", "--verbosity", true,
+    [&] (std::string const &opt) -> bool {
+      int vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        std::cout << "Verbosity: " << vbhold << std::endl;
+        Verbosity = vbhold;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){Verbosity = 0;}, "<0-4>{default=0}");
+  CLIArgs::OptSpec.emplace_back("-M", "--MeV-mode", false,
+    [&] (std::string const &opt) -> bool {
+      std::cout << "Outputting in GeV." << std::endl;
+      OutputInGev = false;
+      return true;
+    }, false,
+    [&](){OutputInGev = true;}, "Use MeV rather than GeV.{default=false}");
+}
+}
+
+int main(int argc, char const * argv[]){
+  SetOpts();
+
+  CLIArgs::AddArguments(argc,argv);
+  if(!CLIArgs::GetOpts()){
+    CLIArgs::SayRunLike();
     return 1;
   }
-  const char* InputName = argv[1];
-  const char* OutputName="pure_sim_transversity_variables.root";
-  const char* GeneratorName="NEUT";
-  long MaxEntries=-1;
 
-  if(argc >= 3){
-    OutputName = argv[2];
-  }
-  if(argc >= 4){
-    GeneratorName = argv[3];
-  }
-  if(argc >= 5){
-    str2int(MaxEntries,argv[4]);
-  }
-  if(argc >= 6){
-    str2int(VERBOSE,argv[5]);
-  }
-  return ProcessRootrackerToTransversityVariables(InputName,
-                                                  OutputName,
-                                                  GeneratorName,
+  return ProcessRootrackerToTransversityVariables(InputName.c_str(),
+                                                  OutputName.c_str(),
+                                                  GeneratorName.c_str(),
                                                   MaxEntries);
 
 }

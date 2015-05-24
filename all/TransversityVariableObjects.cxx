@@ -13,12 +13,9 @@ ClassImp(MuonProtonTransversity);
 ClassImp(PionProductionTransversity);
 
 MuonProtonTransversity::MuonProtonTransversity(
-  TransversityUtils::Generators gen){
+  bool InGev){
   Reset();
-  Gen = gen;
-  if((Gen==TransversityUtils::kGENIE) || (Gen==TransversityUtils::kNuWro)){
-    IsInGev = true;
-  } else { IsInGev = false; }
+  IsInGev = InGev;
 }
 
 void MuonProtonTransversity::HandleProton(TLorentzVector &StdHepPTLV,
@@ -292,12 +289,9 @@ void MuonProtonTransversity::Reset(){
 }
 
 PionProductionTransversity::PionProductionTransversity(
-  TransversityUtils::Generators gen){
+  bool InGev){
   Reset();
-  Gen = gen;
-  if((Gen==TransversityUtils::kGENIE) || (Gen==TransversityUtils::kNuWro)){
-    IsInGev = true;
-  } else { IsInGev = false; }
+  IsInGev = InGev;
 }
 
 void PionProductionTransversity::HandlePiPlus(TLorentzVector &StdHepPTLV,
@@ -474,8 +468,18 @@ void PionProductionTransversity::Finalise(){
   DeltaAlphaT_HMPiPlus_deg = DeltaAlphaT_HMPiPlus*RadToDeg;
   DeltaAlphaT_FirstPiPlus_deg = DeltaAlphaT_FirstPiPlus*RadToDeg;
 
+  ReconNuEnergy = GetReconNuEnergy(MuonNeutrino.FourMomentum.Vect(),
+                                    Muon.FourMomentum,
+                                    HMPiPlus.FourMomentum);
+  ReconTargetMass = GetReconTgtMass(ReconNuEnergy,
+                                    Muon.FourMomentum,
+                                    HMPiPlus.FourMomentum);
+
 }
 void PionProductionTransversity::Reset(){
+
+  ReconNuEnergy = 0;
+  ReconTargetMass = 0;
 
   DeltaPhiT_HMPiPlus = 0;
   DeltaPhiT_FirstPiPlus = 0;

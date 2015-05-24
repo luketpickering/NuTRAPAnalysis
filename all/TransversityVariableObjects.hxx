@@ -27,11 +27,10 @@ private:
   PartStruct HMProton; //!
   PartStruct FirstProton; //!
 
-  TransversityUtils::Generators Gen; //!
   bool IsInGev; //!
 
 public:
-  MuonProtonTransversity(TransversityUtils::Generators gen);
+  MuonProtonTransversity(bool InGeV=true);
 
   Double_t ReconNuEnergy;
   Double_t ReconTargetMass;
@@ -121,11 +120,13 @@ private:
   PartStruct MuonNeutrino; //!
   PartStruct HMPiPlus; //!
   PartStruct FirstPiPlus; //!
-  TransversityUtils::Generators Gen; //!
   bool IsInGev; //!
 
 public:
-  PionProductionTransversity(TransversityUtils::Generators gen);
+  PionProductionTransversity(bool InGeV=true);
+
+  Double_t ReconNuEnergy;
+  Double_t ReconTargetMass;
 
   Double_t DeltaPhiT_FirstPiPlus;
   Double_t DeltaPhiT_HMPiPlus;

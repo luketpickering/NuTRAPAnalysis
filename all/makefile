@@ -2,12 +2,18 @@ CXX := g++
 RCINT := rootcint
 RC := root-config
 
+BDIR :=bin
+LDIR :=lib
+
 TOBJS := TransversityVariableObjects.cxx TransversityUtils.cxx
 TOBJH := $(TOBJS:.cxx=.hxx)
 TOBJDICTS := $(TOBJS:.cxx=_dict.cxx)
 TDICTHEADERS := $(TOBJS:.cxx=_dict.h)
 TOBJLINKDEFS := $(TOBJS:.cxx=_linkdef.h)
 TOBJSO := $(TOBJS:.cxx=.so)
+
+UTILSLOC=../../utils
+UTILSDEPSO=libPureGenUtils.so
 
 TARGET := ProcessRooTrackerToTransversityVariables.exe
 TARGETSRC := $(TARGET:.exe=.cxx)
@@ -24,15 +30,20 @@ all: $(TARGET) tests
 	TransversityTests.exe
 	@echo ""
 	@echo "*********************************************************************"
-	@echo "Success. Note you will need to run me from here or add this directory"
-	@echo "to your LD_LIBRARY_PATH."
+	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
 	@echo "*********************************************************************"
+	mkdir -p $(BDIR) $(LDIR)
+	mv $(TARGET) $(BDIR)/
+	mv $(UTILSDEPSO) $(TOBJSO) $(LDIR)/
+
+$(UTILSDEPSO):
+	ln -s $(UTILSLOC)/lib/$@ $@
 
 tests: TransversityUnitTests.cxx $(TOBJH)
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) $(LDFLAGS) TransversityUnitTests.cxx TransversityUtils.so
 
-$(TARGET): $(TARGETSRC) $(TOBJSO) $(TOBJH)
-	$(CXX) -o $@ -I$(NEUTCLASSDIR) $(CXXFLAGS) $(LDFLAGS) $(TARGETSRC) $(TOBJSO)
+$(TARGET): $(TARGETSRC) $(TOBJSO) $(TOBJH) $(UTILSDEPSO)
+	$(CXX) -o $@ -I$(UTILSLOC) $(CXXFLAGS) $(LDFLAGS) $(TARGETSRC) $(TOBJSO) $(UTILSDEPSO)
 
 TransversityVariableObjects_dict.cxx: TransversityVariableObjects.hxx TransversityUtils.hxx
 	$(RCINT) -f $@ -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
@@ -44,7 +55,10 @@ TransversityUtils.so: TransversityUtils.hxx
 	$(CXX) $(CXXFLAGS) TransversityUtils.cxx -shared -o $@
 
 clean:
-	rm -f $(TOBJDICTS)\
+	rm -rf $(TOBJDICTS)\
         $(TDICTHEADERS)\
         $(TOBJSO)\
+        $(UTILSDEPSO)\
         $(TARGET)\
+        $(BDIR) \
+        $(LDIR)

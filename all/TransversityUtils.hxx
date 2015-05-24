@@ -11,53 +11,7 @@
 
 namespace TransversityUtils {
 
-enum Generators {kNEUT,kGENIE,kNuWro,kInvalid};
-
-//I guess that the pointer array in a statically
-//allocated 2D array shouldn't change, this is probably alright.
-template<typename T, size_t N, size_t M>
-T** NewPPOf2DArray(T (&arr)[N][M]){
-  T** DynArrOfP = new T*[N];
-  for(size_t i =0; i < N; ++i){
-    DynArrOfP[i] = arr[i];
-  }
-  return DynArrOfP;
-}
-
-template<typename T, size_t N>
-std::string PrintArray(T const (&arr)[N]){
-  std::stringstream ss("");
-  ss << "[ ";
-  for(size_t i = 0; i < N; ++i){
-    ss << arr[i] << (((i+1)==N)?"":", ");
-  }
-  ss << " ]";
-  return ss.str();
-}
-
-template<typename T>
-std::string PrintArray(const T* arr, size_t N){
-  std::stringstream ss("");
-  ss << "[ ";
-  for(size_t i = 0; i < N; ++i){
-    ss << arr[i] << (((i+1)==N)?"":", ");
-  }
-  ss << " ]";
-  return ss.str();
-}
-
-enum STR2INT_ERROR { STRINT_SUCCESS,
-                     STRINT_OVERFLOW,
-                     STRINT_UNDERFLOW,
-                     STRINT_INCONVERTIBLE };
-
-///Converts a string to a long, checking for errors.
-///See STR2INT_ERROR for error codes.
-STR2INT_ERROR str2int (long &i, char const *s, int base = 0);
-
-///Converts a string to a int, checking for errors.
-///See STR2INT_ERROR for error codes.
-STR2INT_ERROR str2int (int &i, char const *s, int base = 0);
+enum Generators {kNEUT,kGENIE,kNuWro,kGiBUU,kInvalid};
 
 TVector3 GetVectorInTPlane(const TVector3& inp,
   const TVector3& planarNormal);
