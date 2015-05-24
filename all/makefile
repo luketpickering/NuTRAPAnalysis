@@ -27,7 +27,7 @@ LDFLAGS := $(ROOTLDFLAGS) -Wl,-rpath=.
 .PHONY: all clean
 
 all: $(TARGET) tests
-	TransversityTests.exe
+	./TransversityTests.exe
 	@echo ""
 	@echo "*********************************************************************"
 	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
@@ -37,7 +37,7 @@ all: $(TARGET) tests
 	mv $(UTILSDEPSO) $(TOBJSO) $(LDIR)/
 
 $(UTILSDEPSO):
-	ln -s $(UTILSLOC)/lib/$@ $@
+	ln -s `readlink -f $(UTILSLOC)/lib/$@` $@
 
 tests: TransversityUnitTests.cxx $(TOBJH)
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) $(LDFLAGS) TransversityUnitTests.cxx TransversityUtils.so
