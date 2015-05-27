@@ -28,13 +28,13 @@ LDFLAGS := $(ROOTLDFLAGS) -Wl,-rpath=.
 
 all: $(TARGET) tests
 	./TransversityTests.exe
+	mkdir -p $(BDIR) $(LDIR)
+	mv $(TARGET) $(BDIR)/
+	mv $(UTILSDEPSO) $(TOBJSO) $(LDIR)/
 	@echo ""
 	@echo "*********************************************************************"
 	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
 	@echo "*********************************************************************"
-	mkdir -p $(BDIR) $(LDIR)
-	mv $(TARGET) $(BDIR)/
-	mv $(UTILSDEPSO) $(TOBJSO) $(LDIR)/
 
 $(UTILSDEPSO):
 	ln -s `readlink -f $(UTILSLOC)/lib/$@` $@
