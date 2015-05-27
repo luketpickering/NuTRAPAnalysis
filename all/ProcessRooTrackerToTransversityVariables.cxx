@@ -51,8 +51,10 @@ Double_t GiStdHepP4[kGiStdHepNPmax][4];
 
 //There'll be no name collisions in my DOJO, might be binary bloat though...
 namespace {
+
   int Verbosity = 1;
   bool OutputInGev;
+  int Thresh_MeV = 10;
 
   std::string TreeName="nRooTracker";
 
@@ -215,11 +217,11 @@ int ProcessRootrackerToTransversityVariables(
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
   MuonProtonTransversity* OutInfoCCQEFSI =
-    new MuonProtonTransversity(OutputInGev);
+    new MuonProtonTransversity(OutputInGev, Thresh_MeV);
   outTreePureSim->Branch("MuonProtonTransversity", &OutInfoCCQEFSI);
 
   PionProductionTransversity* OutInfoPionProduction =
-    new PionProductionTransversity(OutputInGev);
+    new PionProductionTransversity(OutputInGev, Thresh_MeV);
   outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
 
   long long doEntries = (MaxEntries==-1) ?
@@ -376,13 +378,34 @@ void SetOpts(){
     [&](){Verbosity = 0;}, "<0-4>{default=0}");
   CLIArgs::OptSpec.emplace_back("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
-      std::cout << "Outputting in GeV." << std::endl;
+      std::cout << "Outputting in MeV." << std::endl;
       OutputInGev = false;
       return true;
     }, false,
     [&](){OutputInGev = true;}, "Use MeV rather than GeV.{default=false}");
+
+  CLIArgs::OptSpec.emplace_back("-g", "--generator", true,
+    [&] (std::string const &opt) -> bool {
+      std::cout << "Attempting to read generator: " << opt << std::endl;
+      GeneratorName = opt;
+      return true;
+    }, false,
+    [&](){GeneratorName = "NEUT";}, "{default=NEUT}");
+
+  CLIArgs::OptSpec.emplace_back("-m", "--Mom-Threshold", true,
+    [&] (std::string const &opt) -> bool {
+      int vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        std::cout << "Momentum threshold: " << vbhold << " MeV" << std::endl;
+        Thresh_MeV = vbhold;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){Thresh_MeV = 10;}, "<int> Momentum threshold [MeV] {default=10}");
 }
 }
+
 
 int main(int argc, char const * argv[]){
   SetOpts();

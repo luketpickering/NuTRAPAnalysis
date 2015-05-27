@@ -30,7 +30,7 @@ private:
   bool IsInGev; //!
 
 public:
-  MuonProtonTransversity(bool InGeV=true);
+  MuonProtonTransversity(bool InGeV=true, Int_t MomentumThresh_MeV=10);
 
   Double_t ReconNuEnergy;
   Double_t ReconTargetMass;
@@ -57,14 +57,19 @@ public:
   Int_t NFinalStateParticles;
 
   Int_t NProtons;
+  Int_t NAboveThresholdProtons;
   Int_t NGamma;
+  Int_t NAboveThresholdGamma;
   Int_t NNeutrons;
 
   Int_t NPiPlus;
+  Int_t NAboveThresholdPiPlus;
   Int_t NPiZero;
   Int_t NPiMinus;
+  Int_t NAboveThresholdPiMinus;
   Int_t NPions;
   Int_t NChargedPions;
+  Int_t NAboveThresholdChargedPions;
 
   Int_t NOtherParticles;
 
@@ -92,6 +97,8 @@ public:
   Int_t TargetPDG;
   Int_t TargetZ;
 
+  Int_t MomentumThresh_MeV;
+
 private:
   void HandleProton(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod);
@@ -116,14 +123,14 @@ struct PionProductionTransversity : public TObject {
 
 private:
   //Transients
-  PartStruct Muon; //!
   PartStruct MuonNeutrino; //!
+  PartStruct Muon; //!
   PartStruct HMPiPlus; //!
   PartStruct FirstPiPlus; //!
   bool IsInGev; //!
 
 public:
-  PionProductionTransversity(bool InGeV=true);
+  PionProductionTransversity(bool InGeV=true, Int_t MomentumThresh_MeV=10);
 
   Double_t ReconNuEnergy;
   Double_t ReconTargetMass;
@@ -145,14 +152,19 @@ public:
 
   Int_t NFinalStateParticles;
   Int_t NProtons;
+  Int_t NAboveThresholdProtons;
   Int_t NGamma;
+  Int_t NAboveThresholdGamma;
   Int_t NNeutrons;
 
   Int_t NPiPlus;
+  Int_t NAboveThresholdPiPlus;
   Int_t NPiZero;
   Int_t NPiMinus;
+  Int_t NAboveThresholdPiMinus;
   Int_t NPions;
   Int_t NChargedPions;
+  Int_t NAboveThresholdChargedPions;
 
   Int_t NOtherParticles;
 
@@ -177,6 +189,8 @@ public:
 
   Int_t TargetPDG;
   Int_t TargetZ;
+
+  Int_t MomentumThresh_MeV;
 
 private:
   void HandlePiPlus(TLorentzVector &StdHepPTLV,

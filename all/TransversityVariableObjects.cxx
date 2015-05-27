@@ -13,9 +13,10 @@ ClassImp(MuonProtonTransversity);
 ClassImp(PionProductionTransversity);
 
 MuonProtonTransversity::MuonProtonTransversity(
-  bool InGev){
+  bool InGev, Int_t MomentumThresh_MeV){
   Reset();
   IsInGev = InGev;
+  this->MomentumThresh_MeV = MomentumThresh_MeV;
 }
 
 void MuonProtonTransversity::HandleProton(TLorentzVector &StdHepPTLV,
@@ -79,12 +80,18 @@ bool MuonProtonTransversity::HandleStdHepParticle(
     }
     case 22:{
       NGamma++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdGamma++;
+      }
       NFinalStateParticles++;
       break;
     }
     case 2212:{
       HandleProton(StdHepPTLV, StdHepP3Mod);
       NProtons++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdProtons++;
+      }
       NFinalStateParticles++;
       break;
     }
@@ -96,6 +103,10 @@ bool MuonProtonTransversity::HandleStdHepParticle(
     case 211:{
       NPiPlus++;
       NChargedPions++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdChargedPions++;
+        NAboveThresholdPiPlus++;
+      }
       NPions++;
       NFinalStateParticles++;
       break;
@@ -103,6 +114,10 @@ bool MuonProtonTransversity::HandleStdHepParticle(
     case -211:{
       NPiMinus++;
       NChargedPions++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdChargedPions++;
+        NAboveThresholdPiMinus++;
+      }
       NPions++;
       NFinalStateParticles++;
       break;
@@ -261,6 +276,12 @@ void MuonProtonTransversity::Reset(){
   NChargedPions = 0;
   NOtherParticles = 0;
 
+  NAboveThresholdProtons = 0;
+  NAboveThresholdGamma = 0;
+  NAboveThresholdPiPlus = 0;
+  NAboveThresholdPiMinus = 0;
+  NAboveThresholdChargedPions = 0;
+
   MuonPDG = 0;
   HMProtonPDG = 0;
   FirstProtonPDG = 0;
@@ -289,9 +310,10 @@ void MuonProtonTransversity::Reset(){
 }
 
 PionProductionTransversity::PionProductionTransversity(
-  bool InGev){
+  bool InGev, Int_t MomentumThresh_MeV){
   Reset();
   IsInGev = InGev;
+  this->MomentumThresh_MeV = MomentumThresh_MeV;
 }
 
 void PionProductionTransversity::HandlePiPlus(TLorentzVector &StdHepPTLV,
@@ -355,11 +377,17 @@ bool PionProductionTransversity::HandleStdHepParticle(
     }
     case 22:{
       NGamma++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdGamma++;
+      }
       NFinalStateParticles++;
       break;
     }
     case 2212:{
       NProtons++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdProtons++;
+      }
       NFinalStateParticles++;
       break;
     }
@@ -372,6 +400,10 @@ bool PionProductionTransversity::HandleStdHepParticle(
       HandlePiPlus(StdHepPTLV, StdHepP3Mod);
       NPiPlus++;
       NChargedPions++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdChargedPions++;
+        NAboveThresholdPiPlus++;
+      }
       NPions++;
       NFinalStateParticles++;
       break;
@@ -379,6 +411,10 @@ bool PionProductionTransversity::HandleStdHepParticle(
     case -211:{
       NPiMinus++;
       NChargedPions++;
+      if(StdHepP3Mod*(IsInGev?1000.0:1) > MomentumThresh_MeV){
+        NAboveThresholdChargedPions++;
+        NAboveThresholdPiMinus++;
+      }
       NPions++;
       NFinalStateParticles++;
       break;
@@ -508,6 +544,12 @@ void PionProductionTransversity::Reset(){
   NPions = 0;
   NChargedPions = 0;
   NOtherParticles = 0;
+
+  NAboveThresholdProtons = 0;
+  NAboveThresholdGamma = 0;
+  NAboveThresholdPiPlus = 0;
+  NAboveThresholdPiMinus = 0;
+  NAboveThresholdChargedPions = 0;
 
   MuonPDG = 0;
   HMPiPlusPDG = 0;
