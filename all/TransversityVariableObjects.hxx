@@ -24,13 +24,19 @@ private:
   //Transients
   PartStruct Muon; //!
   PartStruct MuonNeutrino; //!
+  PartStruct StruckNucleon; //!
   PartStruct HMProton; //!
+  PartStruct HMCPion; //!
   PartStruct FirstProton; //!
+  PartStruct HMTrackable; //!
 
   bool IsInGev; //!
 
+  Int_t SmearingMag; //!
+  bool DoSmear = false; //!
 public:
-  MuonProtonTransversity(bool InGeV=true, Int_t MomentumThresh_MeV=10);
+  MuonProtonTransversity(bool InGeV=true, Int_t MomentumThresh_MeV=10,
+  Int_t SmearingMag=0, bool ds=false);
 
   Double_t ReconNuEnergy;
   Double_t ReconTargetMass;
@@ -41,6 +47,13 @@ public:
 
   Double_t DeltaPhiT_HMProton_deg;
   Double_t DeltaPhiT_FirstProton_deg;
+  Double_t DeltaPhiT_HMTrackable_deg;
+  Double_t DeltaPhiT_HMTrackable_GSmear_deg;
+  Double_t DeltaPhiT_HMTrackable_CSmear_deg;
+  Double_t GSmear_mu_deg;
+  Double_t GSmear_HMTrackable_deg;
+  Double_t CSmear_mu_deg;
+  Double_t CSmear_HMTrackable_deg;
 //DeltaPt
   TVector3 DeltaPT_HMProton_MeV;
   TVector3 DeltaPT_FirstProton_MeV;
@@ -50,6 +63,9 @@ public:
 
   Double_t DeltaAlphaT_HMProton_deg;
   Double_t DeltaAlphaT_FirstProton_deg;
+//DeltaP_TT
+  Double_t DeltaP_TT;
+  Int_t DeltaP_TT_PionPDG;
 //Generator reaction code
   Int_t NeutConventionReactionCode;
 
@@ -71,25 +87,36 @@ public:
   Int_t NChargedPions;
   Int_t NAboveThresholdChargedPions;
 
+  Int_t NAboveThresholdTrackable;
+
   Int_t NOtherParticles;
 
 //Selected final state protperties
   Int_t MuonPDG;
   Int_t HMProtonPDG;
   Int_t FirstProtonPDG;
+  Int_t HMTrackablePDG;
 
   TVector3 MuonDirection;
   Double_t MuonMomentum_MeV;
 
+  TVector3 StruckNucleonDirection;
+  Double_t StruckNucleonMomentum_MeV;
+  Int_t StruckNucleonPDG;
+
   TVector3 HMProtonDirection;
   TVector3 FirstProtonDirection;
+  TVector3 HMTrackableDirection;
 
   Double_t HMProtonMomentum_MeV;
   Double_t FirstProtonMomentum_MeV;
+  Double_t HMTrackableMomentum_MeV;
 
   TVector3 MuonPt_MeV;
   TVector3 HMProtonPt_MeV;
   TVector3 FirstProtonPt_MeV;
+  TVector3 HMTrackablePt_MeV;
+  TVector3 StruckNucleonPt_MeV;
 //Neutrino properties
   Int_t IncNeutrinoPDG;
   TLorentzVector IncNeutrinoMmtm;
@@ -102,7 +129,12 @@ public:
 private:
   void HandleProton(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod);
-
+  void HandleCPion(TLorentzVector &StdHepPTLV,
+    Double_t &StdHepP3Mod, Int_t pdg);
+  void HandleHMTrackable(TLorentzVector &StdHepPTLV,
+    Double_t &StdHepP3Mod, Int_t PDG);
+  void HandleStruckNucleon(TLorentzVector &StdHepPTLV,
+    Double_t &StdHepP3Mod, Int_t pdg);
 public:
   bool SetNeutConventionReactionCode(int rc){
     NeutConventionReactionCode = rc;
@@ -110,8 +142,8 @@ public:
   }
 
   bool HandleStdHepParticle(UInt_t &StdHepPosition,
-                            int &StdHepPdg,
-                            int &StdHepStatus,
+                            Int_t &StdHepPdg,
+                            Int_t &StdHepStatus,
                             Double_t * &StdHepP4);
   void Finalise();
   void Reset();

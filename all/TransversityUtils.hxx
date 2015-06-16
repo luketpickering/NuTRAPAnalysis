@@ -29,6 +29,8 @@ TVector3 GetDeltaPT(TVector3 const &V_lepton,
   TVector3 const &V_other, TVector3 const &Normal);
 Double_t GetDeltaAlphaT(TVector3 const &V_lepton,
   TVector3 const &V_other, TVector3 const &Normal, bool PiMinus=false);
+Double_t GetDeltaPTT(TVector3 const &V_lepton,
+  TVector3 const &V_other1, TVector3 const &V_other2, TVector3 const &Normal);
 
 } // namespace Transversityutils
 #endif

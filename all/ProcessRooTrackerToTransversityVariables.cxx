@@ -55,6 +55,9 @@ namespace {
   int Verbosity = 1;
   bool OutputInGev;
   int Thresh_MeV = 10;
+  int SmearDegrees = 0;
+  bool DoSmear = false;
+  bool DoPionSTs = false;
 
   std::string TreeName="nRooTracker";
 
@@ -217,12 +220,15 @@ int ProcessRootrackerToTransversityVariables(
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
   MuonProtonTransversity* OutInfoCCQEFSI =
-    new MuonProtonTransversity(OutputInGev, Thresh_MeV);
+    new MuonProtonTransversity(OutputInGev, Thresh_MeV, SmearDegrees, DoSmear);
   outTreePureSim->Branch("MuonProtonTransversity", &OutInfoCCQEFSI);
 
-  PionProductionTransversity* OutInfoPionProduction =
-    new PionProductionTransversity(OutputInGev, Thresh_MeV);
-  outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
+  PionProductionTransversity* OutInfoPionProduction;
+  if(DoPionSTs){
+    OutInfoPionProduction =
+      new PionProductionTransversity(OutputInGev, Thresh_MeV);
+    outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
+  }
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :
@@ -232,8 +238,9 @@ int ProcessRootrackerToTransversityVariables(
     RooTrackerChain->GetEntry(i);
 
     OutInfoCCQEFSI->Reset();
-    OutInfoPionProduction->Reset();
-
+    if(DoPionSTs){
+        OutInfoPionProduction->Reset();
+    }
     if(!(i%10000)){
       std::cout << "On entry: " << i  << "/" << doEntries << std::endl;
     }
@@ -273,23 +280,31 @@ int ProcessRootrackerToTransversityVariables(
     }
 
     OutInfoCCQEFSI->SetNeutConventionReactionCode(NeutConventionReactionCode);
-    OutInfoPionProduction->\
-      SetNeutConventionReactionCode(NeutConventionReactionCode);
-
+    if(DoPionSTs){
+      OutInfoPionProduction->\
+        SetNeutConventionReactionCode(NeutConventionReactionCode);
+    }
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
       OutInfoCCQEFSI->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
-      OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
-        StdHepStatus[partNum], StdHepP4[partNum]);
+      if(DoPionSTs){
+        OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
+          StdHepStatus[partNum], StdHepP4[partNum]);
+      }
     }
     OutInfoCCQEFSI->Finalise();
-    OutInfoPionProduction->Finalise();
-
+    if(DoPionSTs){
+      OutInfoPionProduction->Finalise();
+    }
     if((Verbosity>1)){
-      std::cout << "(NProtons==" << (OutInfoCCQEFSI->NProtons) << "),  "
+      std::cout << "**"
+"******************************************************************************"
+        << "\n\t#Ev: " << i << "\n"
         << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
-        << OutInfoCCQEFSI->HMProtonMomentum_MeV << " [MeV/C]): " << std::endl;
-      std::cout << "NParticles: " << (*StdHepN) << " - ("
+        << OutInfoCCQEFSI->HMProtonMomentum_MeV << " [MeV/C]): " << "\n**"
+"******************************************************************************"
+        << std::endl;
+      std::cout << "NParticles: " << (*StdHepN) << " - (Neut Reac Code: "
         << NeutConventionReactionCode << ")" << std::endl;
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
         std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
@@ -302,14 +317,19 @@ int ProcessRootrackerToTransversityVariables(
   }
   outTreePureSim->Write();
   outFile->Write();
-  outFile->Close();
 
+  std::cout << "Wrote " << outTreePureSim->GetEntries() << " entries to disk."
+    << std::endl;
+
+  outFile->Close();
 
   delete RooTrackerChain;
   delete outFile;
   delete [] StdHepP4;
   delete OutInfoCCQEFSI;
-  delete OutInfoPionProduction;
+  if(DoPionSTs){
+    delete OutInfoPionProduction;
+  }
 }
 
 void SayUsage(char const *runcmd){
@@ -336,14 +356,14 @@ void SetOpts(){
 
   CLIArgs::OptSpec.emplace_back("-i", "--input-file", true,
     [&] (std::string const &opt) -> bool {
-      std::cout << "\tReading from file descriptor : " << opt << std::endl;
+      std::cout << "\t--Reading from file descriptor : " << opt << std::endl;
       InputName = opt;
       return true;
     }, true,[](){},"<TChain::Add descriptor>");
 
   CLIArgs::OptSpec.emplace_back("-o", "--output-file", true,
     [&] (std::string const &opt) -> bool {
-      std::cout << "\tWriting to File: " << opt << std::endl;
+      std::cout << "\t--Writing to File: " << opt << std::endl;
       OutputName = opt;
       return true;
     }, false,
@@ -355,7 +375,7 @@ void SetOpts(){
       long vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
         if(vbhold != -1){
-          std::cout << "Looking at, at most, " << vbhold << " entries."
+          std::cout << "\t--Looking at, at most, " << vbhold << " entries."
             << std::endl;
         }
         MaxEntries = vbhold;
@@ -369,7 +389,7 @@ void SetOpts(){
     [&] (std::string const &opt) -> bool {
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "Verbosity: " << vbhold << std::endl;
+        std::cout << "\t--Verbosity: " << vbhold << std::endl;
         Verbosity = vbhold;
         return true;
       }
@@ -378,7 +398,7 @@ void SetOpts(){
     [&](){Verbosity = 0;}, "<0-4>{default=0}");
   CLIArgs::OptSpec.emplace_back("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
-      std::cout << "Outputting in MeV." << std::endl;
+      std::cout << "\t--Outputting in MeV." << std::endl;
       OutputInGev = false;
       return true;
     }, false,
@@ -386,7 +406,7 @@ void SetOpts(){
 
   CLIArgs::OptSpec.emplace_back("-g", "--generator", true,
     [&] (std::string const &opt) -> bool {
-      std::cout << "Attempting to read generator: " << opt << std::endl;
+      std::cout << "\t--Attempting to read generator: " << opt << std::endl;
       GeneratorName = opt;
       return true;
     }, false,
@@ -396,13 +416,33 @@ void SetOpts(){
     [&] (std::string const &opt) -> bool {
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "Momentum threshold: " << vbhold << " MeV" << std::endl;
+        std::cout << "\t--Momentum threshold: " << vbhold << " MeV" << std::endl;
         Thresh_MeV = vbhold;
         return true;
       }
       return false;
     }, false,
     [&](){Thresh_MeV = 10;}, "<int> Momentum threshold [MeV] {default=10}");
+
+  CLIArgs::OptSpec.emplace_back("-S", "--Gauss-Smear", true,
+    [&] (std::string const &opt) -> bool {
+      int vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        std::cout << "\t--Gaussian smear by: " << vbhold << " degrees" << std::endl;
+        SmearDegrees = vbhold;
+        DoSmear = true;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){SmearDegrees = 0; DoSmear = false;}, "<int> Gaussian smear width [degress] {default=0}");
+
+  CLIArgs::OptSpec.emplace_back("-P", "--Do-Pion-ST", false,
+    [&] (std::string const &opt) -> bool {
+      DoPionSTs = true;
+      return true;
+    }, false,
+    [&](){DoPionSTs = false;}, "Output Muon-Pion Single transverse tree {default=false}");
 }
 }
 

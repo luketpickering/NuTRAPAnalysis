@@ -54,4 +54,11 @@ Double_t GetDeltaAlphaT(TVector3 const &V_lepton,
   return GetDeltaPhiT(V_lepton,DeltaPT,Normal,PiMinus);
 }
 
+Double_t GetDeltaPTT(TVector3 const &V_lepton,
+  TVector3 const &V_other1, TVector3 const &V_other2, TVector3 const &Normal){
+  TVector3 ZTT_Unit = (Normal.Cross(V_lepton)).Unit();
+
+  return V_other1.Dot(ZTT_Unit) + V_other2.Dot(ZTT_Unit);
+}
+
 }
