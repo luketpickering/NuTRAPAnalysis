@@ -70,15 +70,16 @@ if(StdHepP3Mod > HMCPion.Momentum){
 
 void MuonProtonTransversity::HandleStruckNucleon(TLorentzVector &StdHepPTLV,
   Double_t &StdHepP3Mod, Int_t pdg){
-  if((pdg == 2112) || (pdg == 2212)){
-    StruckNucleon.Momentum = StdHepP3Mod;
-    StruckNucleon.FourMomentum = StdHepPTLV;
-    StruckNucleon.PDG = pdg;
-  } else {
-    std::cout << "Found Struck \'nucleon\' with PDG: " << pdg
-      << ", could be coherent, Reaction Code: " << NeutConventionReactionCode
-      << std::endl;
-  }
+
+  StruckNucleon.Momentum = StdHepP3Mod;
+  StruckNucleon.FourMomentum = StdHepPTLV;
+  StruckNucleon.PDG = pdg;
+
+  // if((pdg != 2112) && (pdg != 2212)){
+  //   std::cout << "Found Struck \'nucleon\' with PDG: " << pdg
+  //     << ", could be coherent, Reaction Code: " << NeutConventionReactionCode
+  //     << std::endl;
+  // }
 }
 
 bool MuonProtonTransversity::HandleStdHepParticle(
@@ -102,11 +103,6 @@ bool MuonProtonTransversity::HandleStdHepParticle(
   } else if(StdHepPosition == 1){ //Target Nucleus
     TargetPDG = StdHepPdg;
     TargetZ = ((StdHepPdg/10000)%1000);
-    return true;
-  }
-
-  if(StdHepStatus == 11){
-    HandleStruckNucleon(StdHepPTLV,StdHepP3Mod,StdHepPdg);
     return true;
   }
 

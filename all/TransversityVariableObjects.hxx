@@ -133,8 +133,6 @@ private:
     Double_t &StdHepP3Mod, Int_t pdg);
   void HandleHMTrackable(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod, Int_t PDG);
-  void HandleStruckNucleon(TLorentzVector &StdHepPTLV,
-    Double_t &StdHepP3Mod, Int_t pdg);
 public:
   bool SetNeutConventionReactionCode(int rc){
     NeutConventionReactionCode = rc;
@@ -145,6 +143,8 @@ public:
                             Int_t &StdHepPdg,
                             Int_t &StdHepStatus,
                             Double_t * &StdHepP4);
+  void HandleStruckNucleon(TLorentzVector &StdHepPTLV,
+    Double_t &StdHepP3Mod, Int_t pdg);
   void Finalise();
   void Reset();
 

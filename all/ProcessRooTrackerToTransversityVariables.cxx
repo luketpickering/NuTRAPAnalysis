@@ -22,7 +22,7 @@ constexpr int kNStdHepNPmax = 100;
 constexpr int kNuStdHepNPmax = 4000;
 constexpr int kGiStdHepNPmax = 100;
 
-TString* NeutReacCode = 0;
+TObjString* NeutReacCode = 0;
 Int_t NStdHepN;
 Int_t NStdHepPdg[kNStdHepNPmax];
 Int_t NStdHepStatus[kNStdHepNPmax];
@@ -257,10 +257,10 @@ int ProcessRootrackerToTransversityVariables(
       }
       case kNEUT:{
         if(PGUtils::str2int(NeutConventionReactionCode,
-                  GeneratorDependent::NeutReacCode->Data())
+                  GeneratorDependent::NeutReacCode->String().Data())
           != PGUtils::STRINT_SUCCESS){
           std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
-            GeneratorDependent::NeutReacCode->Data() << std::endl;
+            GeneratorDependent::NeutReacCode->String() << std::endl;
         }
         break;
       }
@@ -287,6 +287,43 @@ int ProcessRootrackerToTransversityVariables(
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
       OutInfoCCQEFSI->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
+
+      //Struck Nucleon kinematics are stored differently for the different
+      //generators
+      switch(Generator){
+        case kNuWro:{
+          if(partNum == 1){
+            TLorentzVector StdHepPTLV = TLorentzVector(
+              StdHepP4[partNum][kStdHepIdxPx],
+              StdHepP4[partNum][kStdHepIdxPy],
+              StdHepP4[partNum][kStdHepIdxPz],
+              StdHepP4[partNum][kStdHepIdxE]);
+            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
+            OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod, 0);
+            std::cout << "HERE -- NuWro (" << StdHepP3Mod << ")" << std::endl;
+          }
+          break;
+        }
+        case kNEUT:
+        case kGENIE:{
+          if(StdHepStatus[partNum]==11){
+            TLorentzVector StdHepPTLV = TLorentzVector(
+              StdHepP4[partNum][kStdHepIdxPx],
+              StdHepP4[partNum][kStdHepIdxPy],
+              StdHepP4[partNum][kStdHepIdxPz],
+              StdHepP4[partNum][kStdHepIdxE]);
+            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
+            OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
+              StdHepPdg[partNum]);
+            std::cout << "HERE -- N/G (" << StdHepP3Mod << ")" << std::endl;
+          }
+          break;
+        }
+        case kGiBUU:{
+          break;
+        }
+      }
+
       if(DoPionSTs){
         OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
           StdHepStatus[partNum], StdHepP4[partNum]);
@@ -306,6 +343,9 @@ int ProcessRootrackerToTransversityVariables(
         << std::endl;
       std::cout << "NParticles: " << (*StdHepN) << " - (Neut Reac Code: "
         << NeutConventionReactionCode << ")" << std::endl;
+      std::cout << "Struck Nucleon { Momentum: "
+        << OutInfoCCQEFSI->StruckNucleonMomentum_MeV
+        << ", PDG: " << OutInfoCCQEFSI->StruckNucleonPDG << "}" << std::endl;
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
         std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
           << " (Status==" << StdHepStatus[partNum] << ") "
