@@ -431,8 +431,8 @@ void TransversityVars::Finalise(){
 //                       Others and Transients
 //******************************************************************************
 
-  CCQE_deltaP_MeV = (Muon.FourMomentum + HMProton.FourMomentum -
-    MuonNeutrino.FourMomentum - StruckNucleon.FourMomentum).Mag();
+  CCQE_deltaP_MeV = Muon.FourMomentum + HMProton.FourMomentum -
+    MuonNeutrino.FourMomentum - StruckNucleon.FourMomentum;
 
 //******************************************************************************
 //******************************************************************************
