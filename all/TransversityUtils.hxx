@@ -8,6 +8,8 @@
 #include <sstream>
 
 #include <TVector3.h>
+#include <TLorentzVector.h>
+
 
 namespace TransversityUtils {
 
@@ -31,6 +33,15 @@ Double_t GetDeltaAlphaT(TVector3 const &V_lepton,
   TVector3 const &V_other, TVector3 const &Normal, bool PiMinus=false);
 Double_t GetDeltaPTT(TVector3 const &V_lepton,
   TVector3 const &V_other1, TVector3 const &V_other2, TVector3 const &Normal);
+
+Double_t GetReconNuEnergy(const TVector3 &nudir,
+  const TLorentzVector &mumom, const TLorentzVector &pmom);
+Double_t GetCCQEERec(const TVector3 &nudir,
+  const TLorentzVector &mumom, Double_t E_b);
+Double_t GetMuPERec(const TLorentzVector &mumom, const TLorentzVector &pmom,
+  Double_t E_b);
+Double_t GetReconTgtMass(Double_t const &nuE,
+  const TLorentzVector &mumom, const TLorentzVector &pmom);
 
 } // namespace Transversityutils
 #endif

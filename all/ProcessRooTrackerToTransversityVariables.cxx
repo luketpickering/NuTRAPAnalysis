@@ -54,12 +54,17 @@ namespace {
 
   int Verbosity = 1;
   bool OutputInGev;
-  int Thresh_MeV = 10;
   int SmearDegrees = 0;
+  int Smear_Mom_Mu_MeV = 0;
+  int Smear_Mom_P_MeV = 0;
+  Double_t TargetBE_MeV = 0;
   bool DoSmear = false;
-  bool DoPionSTs = false;
+
+  Int_t NThresh = 0;
+  Int_t Threshs_MeV[kNThreshMax];
 
   std::string TreeName="nRooTracker";
+  TString generatorName;
 
   Generators Generator = kInvalid;
 
@@ -81,6 +86,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
 
   if((GeneratorName == "NEUT") || (GeneratorName == "neut")){
 
+    generatorName = "NEUT";
     StdHepN = &GeneratorDependent::NStdHepN;
     StdHepPdg = GeneratorDependent::NStdHepPdg;
     StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NStdHepP4);
@@ -91,6 +97,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
       << std::endl;
   } else if((GeneratorName == "GENIE") || (GeneratorName == "genie")){
 
+    generatorName = "GENIE";
     StdHepN = &GeneratorDependent::GStdHepN;
     StdHepPdg = GeneratorDependent::GStdHepPdg;
     StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
@@ -102,6 +109,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
   } else if((GeneratorName == "NuWro") || (GeneratorName == "nuwro") ||
       (GeneratorName == "NUWRO")){
 
+    generatorName = "NuWro";
     StdHepN = &GeneratorDependent::NuStdHepN;
     StdHepPdg = GeneratorDependent::NuStdHepPdg;
     StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NuStdHepP4);
@@ -113,6 +121,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
   } else if((GeneratorName == "GiBUU") || (GeneratorName == "gibuu") ||
       (GeneratorName == "GIBUU")){
 
+    generatorName = "GiBUU";
     StdHepN = &GeneratorDependent::GiStdHepN;
     StdHepPdg = GeneratorDependent::GiStdHepPdg;
     StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GiStdHepP4);
@@ -219,16 +228,11 @@ int ProcessRootrackerToTransversityVariables(
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  MuonProtonTransversity* OutInfoCCQEFSI =
-    new MuonProtonTransversity(OutputInGev, Thresh_MeV, SmearDegrees, DoSmear);
-  outTreePureSim->Branch("MuonProtonTransversity", &OutInfoCCQEFSI);
-
-  PionProductionTransversity* OutInfoPionProduction;
-  if(DoPionSTs){
-    OutInfoPionProduction =
-      new PionProductionTransversity(OutputInGev, Thresh_MeV);
-    outTreePureSim->Branch("PionProductionTransversity", &OutInfoPionProduction);
-  }
+  TransversityVars* OutInfoCCQEFSI =
+    new TransversityVars(OutputInGev, TargetBE_MeV,
+      NThresh, Threshs_MeV, SmearDegrees, Smear_Mom_Mu_MeV, Smear_Mom_P_MeV, DoSmear,
+      generatorName);
+  outTreePureSim->Branch("TransV", &OutInfoCCQEFSI);
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :
@@ -238,9 +242,6 @@ int ProcessRootrackerToTransversityVariables(
     RooTrackerChain->GetEntry(i);
 
     OutInfoCCQEFSI->Reset();
-    if(DoPionSTs){
-        OutInfoPionProduction->Reset();
-    }
     if(!(i%10000)){
       std::cout << "On entry: " << i  << "/" << doEntries << std::endl;
     }
@@ -280,10 +281,6 @@ int ProcessRootrackerToTransversityVariables(
     }
 
     OutInfoCCQEFSI->SetNeutConventionReactionCode(NeutConventionReactionCode);
-    if(DoPionSTs){
-      OutInfoPionProduction->\
-        SetNeutConventionReactionCode(NeutConventionReactionCode);
-    }
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
       OutInfoCCQEFSI->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
@@ -300,7 +297,6 @@ int ProcessRootrackerToTransversityVariables(
               StdHepP4[partNum][kStdHepIdxE]);
             Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
             OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod, 0);
-            std::cout << "HERE -- NuWro (" << StdHepP3Mod << ")" << std::endl;
           }
           break;
         }
@@ -315,7 +311,6 @@ int ProcessRootrackerToTransversityVariables(
             Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
             OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
               StdHepPdg[partNum]);
-            std::cout << "HERE -- N/G (" << StdHepP3Mod << ")" << std::endl;
           }
           break;
         }
@@ -324,28 +319,22 @@ int ProcessRootrackerToTransversityVariables(
         }
       }
 
-      if(DoPionSTs){
-        OutInfoPionProduction->HandleStdHepParticle(partNum, StdHepPdg[partNum],
-          StdHepStatus[partNum], StdHepP4[partNum]);
-      }
     }
     OutInfoCCQEFSI->Finalise();
-    if(DoPionSTs){
-      OutInfoPionProduction->Finalise();
-    }
+
     if((Verbosity>1)){
       std::cout << "**"
 "******************************************************************************"
         << "\n\t#Ev: " << i << "\n"
         << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
-        << OutInfoCCQEFSI->HMProtonMomentum_MeV << " [MeV/C]): " << "\n**"
+        << OutInfoCCQEFSI->HMProton.Momentum << " [MeV/C]): " << "\n**"
 "******************************************************************************"
         << std::endl;
       std::cout << "NParticles: " << (*StdHepN) << " - (Neut Reac Code: "
         << NeutConventionReactionCode << ")" << std::endl;
       std::cout << "Struck Nucleon { Momentum: "
-        << OutInfoCCQEFSI->StruckNucleonMomentum_MeV
-        << ", PDG: " << OutInfoCCQEFSI->StruckNucleonPDG << "}" << std::endl;
+        << OutInfoCCQEFSI->StruckNucleon.Momentum
+        << ", PDG: " << OutInfoCCQEFSI->StruckNucleon.PDG << "}" << std::endl;
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
         std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
           << " (Status==" << StdHepStatus[partNum] << ") "
@@ -367,18 +356,6 @@ int ProcessRootrackerToTransversityVariables(
   delete outFile;
   delete [] StdHepP4;
   delete OutInfoCCQEFSI;
-  if(DoPionSTs){
-    delete OutInfoPionProduction;
-  }
-}
-
-void SayUsage(char const *runcmd){
-  std::cout << "Run Like:\n\t" << runcmd << " <Input-File-Descriptor> "
-  "[<OutputName>=pure_sim_transversity_variables.root] [<GeneratorName>=NEUT]"
-  " [<int:MaximumEntriesToProcess>=-1]"
-  "\n\tMaximumEntriesToProcess == -1 means process all found in input files."
-  "\n\tIf you provide a argument you must provide all preceeding ones."
-  << std::endl;
 }
 
 namespace {
@@ -452,37 +429,76 @@ void SetOpts(){
     }, false,
     [&](){GeneratorName = "NEUT";}, "{default=NEUT}");
 
-  CLIArgs::OptSpec.emplace_back("-m", "--Mom-Threshold", true,
+  CLIArgs::OptSpec.emplace_back("-m", "--EKin-Threshold", true,
     [&] (std::string const &opt) -> bool {
+      if(NThresh==kNThreshMax){
+        std::cout << "[ERROR]: Tried to add too many momentum thresholds."
+          << std::endl;
+        return false;
+      }
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Momentum threshold: " << vbhold << " MeV" << std::endl;
-        Thresh_MeV = vbhold;
+        std::cout << "\t--Added EKin threshold: " << vbhold << " MeV" << std::endl;
+        Threshs_MeV[NThresh] = vbhold;
+        NThresh++;
         return true;
       }
       return false;
     }, false,
-    [&](){Thresh_MeV = 10;}, "<int> Momentum threshold [MeV] {default=10}");
+    [&](){}, "<int> Add EKin threshold [MeV] {default=N/A}");
 
-  CLIArgs::OptSpec.emplace_back("-S", "--Gauss-Smear", true,
+  CLIArgs::OptSpec.emplace_back("-P", "--Phi-Smear", true,
     [&] (std::string const &opt) -> bool {
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Gaussian smear by: " << vbhold << " degrees" << std::endl;
+        std::cout << "\t--Smear track angle by: " << vbhold << " degrees" << std::endl;
         SmearDegrees = vbhold;
         DoSmear = true;
         return true;
       }
       return false;
     }, false,
-    [&](){SmearDegrees = 0; DoSmear = false;}, "<int> Gaussian smear width [degress] {default=0}");
+    [&](){SmearDegrees = 0; DoSmear = false;}, "<int> Gaussian smear width [degrees] {default=0}");
 
-  CLIArgs::OptSpec.emplace_back("-P", "--Do-Pion-ST", false,
+  CLIArgs::OptSpec.emplace_back("-Sp", "--Mom-Proton-Smear", true,
     [&] (std::string const &opt) -> bool {
-      DoPionSTs = true;
-      return true;
+      int vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        std::cout << "\t--Smear measured proton momentum by: " << vbhold << " MeV" << std::endl;
+        Smear_Mom_P_MeV = vbhold;
+        DoSmear = true;
+        return true;
+      }
+      return false;
     }, false,
-    [&](){DoPionSTs = false;}, "Output Muon-Pion Single transverse tree {default=false}");
+    [&](){Smear_Mom_P_MeV = 0;}, "<int> Gaussian smear Proton Momenta by [MeV] {default=0.0}");
+
+  CLIArgs::OptSpec.emplace_back("-Smu", "--Mom-Muon-Smear", true,
+    [&] (std::string const &opt) -> bool {
+      int vbhold;
+      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
+        std::cout << "\t--Smear measured muon momentum by: " << vbhold << " MeV" << std::endl;
+        Smear_Mom_Mu_MeV = vbhold;
+        DoSmear = true;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){Smear_Mom_P_MeV = 0;}, "<int> Gaussian smear Muon Momenta by [MeV] {default=0.0}");
+
+  CLIArgs::OptSpec.emplace_back("-B", "--Binding-Energy", true,
+    [&] (std::string const &opt) -> bool {
+      float vbhold = std::stof(opt);
+      if(vbhold){
+        std::cout << "\t--Using  " << vbhold << " MeV binding energy in ERec"
+          << std::endl;
+        TargetBE_MeV = vbhold;
+        return true;
+      }
+      return false;
+    }, false,
+    [&](){TargetBE_MeV = 0xdeadbeef;},
+    "<float> Binding energy used in nu_erec calculations [MeV] {default=25.0}");
 }
 }
 
@@ -495,6 +511,9 @@ int main(int argc, char const * argv[]){
     CLIArgs::SayRunLike();
     return 1;
   }
+
+  std::cout << "Running with " << NThresh << " set momentum thresholds."
+    << std::endl;
 
   return ProcessRootrackerToTransversityVariables(InputName.c_str(),
                                                   OutputName.c_str(),
