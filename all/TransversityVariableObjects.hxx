@@ -83,11 +83,13 @@ public:
 //First Proton
   Int_t FirstProton_PDG;
   TLorentzVector FirstProton_4Mom_MeV;
+  Int_t FirstProton_StdHepPosition;
 
 //Highest Momentum Proton
   Int_t HMProton_PDG;
   TLorentzVector HMProton_4Mom_MeV;
   Double_t HMProton_MomMag_MeV_GSmear;
+  Int_t HMProton_StdHepPosition;
 
 //Highest Momentum Trackable
   Int_t HMTrackable_PDG;

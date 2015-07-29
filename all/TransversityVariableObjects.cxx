@@ -62,14 +62,16 @@ void TransversityVars::HandleProton(TLorentzVector &StdHepPTLV,
   Double_t &StdHepP3Mod, UInt_t &StdHepPosition){
 
   if(!FirstProton.PDG){
-    HMProton.StdHepPosition = StdHepPosition;
     FirstProton.PDG = 2212;
     FirstProton.Momentum = StdHepP3Mod;
     FirstProton.FourMomentum = StdHepPTLV;
+    FirstProton.StdHepPosition = StdHepPosition;
 
     HMProton.PDG = 2212;
     HMProton.Momentum = StdHepP3Mod;
     HMProton.FourMomentum = StdHepPTLV;
+    HMProton.StdHepPosition = StdHepPosition;
+
   }
   else if(StdHepP3Mod > HMProton.Momentum){
     HMProton.StdHepPosition = StdHepPosition;
@@ -339,10 +341,12 @@ void TransversityVars::Finalise(){
 //First Proton
   FirstProton_PDG = FirstProton.PDG;
   FirstProton_4Mom_MeV = FirstProton.FourMomentum;
+  FirstProton_StdHepPosition = FirstProton.StdHepPosition;
 
 //Highest Momentum Proton
   HMProton_PDG = HMProton.PDG;
   HMProton_4Mom_MeV = HMProton.FourMomentum;
+  HMProton_StdHepPosition = HMProton.StdHepPosition;
 
 //Highest Momentum Trackable
   HMTrackable_PDG = HMTrackable.PDG;
@@ -473,11 +477,13 @@ void TransversityVars::Reset(){
 //First Proton
   FirstProton_PDG = 0;
   FirstProton_4Mom_MeV = TLorentzVector(0,0,0,0);
+  FirstProton_StdHepPosition = -1;
 
 //Highest Momentum Proton
   HMProton_PDG = 0;
   HMProton_4Mom_MeV = TLorentzVector(0,0,0,0);
   HMProton_MomMag_MeV_GSmear = 0;
+  HMProton_StdHepPosition = -1;
 
 //Highest Momentum Trackable
   HMTrackable_PDG = 0;
