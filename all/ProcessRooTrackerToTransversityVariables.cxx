@@ -322,7 +322,7 @@ int ProcessRootrackerToTransversityVariables(
     }
     OutInfoCCQEFSI->Finalise();
 
-    if((Verbosity>1)){
+    if(Verbosity>1){
       std::cout << "**"
 "******************************************************************************"
         << "\n\t#Ev: " << i << "\n"
@@ -335,6 +335,12 @@ int ProcessRootrackerToTransversityVariables(
       std::cout << "Struck Nucleon { Momentum: "
         << OutInfoCCQEFSI->StruckNucleon.Momentum
         << ", PDG: " << OutInfoCCQEFSI->StruckNucleon.PDG << "}" << std::endl;
+
+        std::cout << "------\nTransverse Variables"
+        << "\n\t DeltaP:" << OutInfoCCQEFSI->DeltaPTotal_HMProton_MeV.Mag()
+        << "\n\tP_0^p: " <<  OutInfoCCQEFSI->DeltaPProton_MeV.Mag()
+        << "\n------" << std::endl;
+
       for(int partNum = 0; partNum < (*StdHepN); ++partNum){
         std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
           << " (Status==" << StdHepStatus[partNum] << ") "
@@ -439,6 +445,13 @@ void SetOpts(){
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
         std::cout << "\t--Added EKin threshold: " << vbhold << " MeV" << std::endl;
+        if(NThresh>0 && (vbhold <= Threshs_MeV[NThresh-1])){
+          std::cout << "[ERROR]: Attempting to add EKin threshold at " << vbhold
+            << " MeV, but the previous one at " << Threshs_MeV[NThresh-1]
+            << " is lower.\n\tThresholds must be added in ascending order."
+            << std::endl;
+          return false;
+        }
         Threshs_MeV[NThresh] = vbhold;
         NThresh++;
         return true;

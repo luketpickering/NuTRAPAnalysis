@@ -91,6 +91,10 @@ public:
   Double_t HMProton_MomMag_MeV_GSmear;
   Int_t HMProton_StdHepPosition;
 
+//Highest Momentum Charged Pion
+  Int_t HMCPion_PDG;
+  TLorentzVector HMCPion_4Mom_MeV;
+
 //Highest Momentum Trackable
   Int_t HMTrackable_PDG;
   TLorentzVector HMTrackable_4Mom_MeV;
@@ -110,12 +114,35 @@ public:
   TVector3 DeltaPT_HMProton_MeV;
   TVector3 DeltaPT_FirstProton_MeV;
 
+//DeltaPTotal
+  TVector3 DeltaPTotal_HMProton_MeV;
+  TVector3 DeltaPTotal_FirstProton_MeV;
+
+//DeltaPNuclearEffect
+  TVector3 DeltaPNuclearEffect_HMProton_MeV;
+  TVector3 DeltaPNuclearEffect_FirstProton_MeV;
+
+//DeltaPProton
+  TVector3 DeltaPProton_MeV;
+
+//DeltaPTargetNucleon
+  TVector3 DeltaPTargetNucleon_MeV;
+
 //DeltaAlphat
   Double_t DeltaAlphaT_HMProton_deg;
   Double_t DeltaAlphaT_FirstProton_deg;
+
 //DeltaP_TT
   Int_t DeltaP_TT_PionPDG;
   Double_t DeltaP_TT;
+
+//ProtonPion Combo Platter
+  TVector3 HMProtonPion_3Mom_MeV;
+  Double_t DeltaPhiT_HMProtonPion_deg;
+  TVector3 DeltaPT_HMProtonPion_MeV;
+  Double_t DeltaAlphaT_HMProtonPion_deg;
+  TVector3 DeltaPTotal_HMProtonPion_MeV;
+
 
 //******************************************************************************
 //                       Smeared Sample States
@@ -125,7 +152,7 @@ public:
   Double_t HMTrackable_phi_GSmear_deg;
 
 //******************************************************************************
-//                       Final State Particles
+//                       Subsequent Species Sums
 //******************************************************************************
 
   Int_t NFinalStateParticles;
@@ -164,6 +191,7 @@ public:
 
   TLorentzVector CCQE_deltaP_MeV;
 
+  Double_t CCQ2;
 
   //Transients
   PartStruct Muon; //!
