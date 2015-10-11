@@ -24,9 +24,18 @@ ROOTLDFLAGS := `$(RC) --libs --glibs`
 CXXFLAGS := -fPIC $(ROOTCFLAGS) -g -std=c++11
 LDFLAGS := $(ROOTLDFLAGS) -Wl,-rpath=.
 
-.PHONY: all clean
+.PHONY: all wtests clean
 
-all: $(TARGET) tests
+all: $(TARGET)
+	mkdir -p $(BDIR) $(LDIR)
+	mv $(TARGET) $(BDIR)/
+	mv $(UTILSDEPSO) $(LDIR)/
+	@echo ""
+	@echo "*********************************************************************"
+	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
+	@echo "*********************************************************************"
+
+wtests: $(TARGET) tests
 	./TransversityTests.exe
 	mkdir -p $(BDIR) $(LDIR)
 	mv $(TARGET) $(BDIR)/
@@ -35,6 +44,7 @@ all: $(TARGET) tests
 	@echo "*********************************************************************"
 	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
 	@echo "*********************************************************************"
+
 
 $(UTILSDEPSO):
 	ln -s `readlink -f $(UTILSLOC)/lib/$@` $@

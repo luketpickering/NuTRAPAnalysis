@@ -12,25 +12,62 @@ constexpr int kStdHepIdxPx = 0;
 constexpr int kStdHepIdxPy = 1;
 constexpr int kStdHepIdxPz = 2;
 constexpr int kStdHepIdxE = 3;
+
+template<size_t N>
+void ClearArray(TLorentzVector (&arr)[N]){
+  for(size_t i = 0; i < N; ++i){
+    arr[i].SetXYZT(0,0,0,0);
+  }
+}
+template<size_t N>
+void ClearArray(Double_t (&arr)[N]){
+  for(size_t i = 0; i < N; ++i){
+    arr[i] = 0.0;
+  }
+}
+
+void ClearArray(Double_t *arr, size_t N){
+  for(size_t i = 0; i < N; ++i){
+    arr[i] = 0.0;
+  }
+}
+
 }
 
 ClassImp(TransversityVars);
 
+TransversityVars::~TransversityVars(){
+  delete OtherFSPiPlus4Momenta_MeV_X;
+  delete OtherFSPiPlus4Momenta_MeV_Y;
+  delete OtherFSPiPlus4Momenta_MeV_Z;
+  delete OtherFSPiPlus4Momenta_MeV_T;
+  delete OtherFSProton4Momenta_MeV_X;
+  delete OtherFSProton4Momenta_MeV_Y;
+  delete OtherFSProton4Momenta_MeV_Z;
+  delete OtherFSProton4Momenta_MeV_T;
+}
+
 TransversityVars::TransversityVars(
   bool InGeV, Double_t TargetBE_MeV, Int_t NThresh, Int_t* Threshs_MeV,
-  Int_t SmearingMag_PhiDeg, Int_t SmearingMag_MuMmtmMeV,
-  Int_t SmearingMag_PMmtmMeV, bool ds,
   TString generatorName){
   GeneratorName = generatorName;
-  Reset();
+
   this->NThresh = NThresh;
   this->Threshs_MeV = Threshs_MeV;
   IsInGev = InGeV;
-  this->SmearingMag_PhiDeg = SmearingMag_PhiDeg;
-  this->SmearingMag_MuMmtmMeV = SmearingMag_MuMmtmMeV;
-  this->SmearingMag_PMmtmMeV = SmearingMag_PMmtmMeV;
-  this->DoSmear = ds;
   this->TargetBE_MeV = TargetBE_MeV;
+
+  OtherFSPiPlus4Momenta_MeV_X = new Double_t[kMaxFSMomenta];
+  OtherFSPiPlus4Momenta_MeV_Y = new Double_t[kMaxFSMomenta];
+  OtherFSPiPlus4Momenta_MeV_Z = new Double_t[kMaxFSMomenta];
+  OtherFSPiPlus4Momenta_MeV_T = new Double_t[kMaxFSMomenta];
+  OtherFSProton4Momenta_MeV_X = new Double_t[kMaxFSMomenta];
+  OtherFSProton4Momenta_MeV_Y = new Double_t[kMaxFSMomenta];
+  OtherFSProton4Momenta_MeV_Z = new Double_t[kMaxFSMomenta];
+  OtherFSProton4Momenta_MeV_T = new Double_t[kMaxFSMomenta];
+
+  Reset();
+
 }
 
 Int_t TransversityVars::PartIsAboveThresh(TLorentzVector FourMom){
@@ -45,7 +82,7 @@ Int_t TransversityVars::PartIsAboveThresh(TLorentzVector FourMom){
 
 template <size_t N>
 void IncrementThreshArray(Int_t (&NAboveThreshold) [N], Int_t threshlvl){
-  for(size_t i = 0; ((i < N) && (Int_t(i) < threshlvl)); ++i){
+  for(size_t i = 0; ((i < N) && (Int_t(i) <= threshlvl)); ++i){
     NAboveThreshold[i]++;
   }
 }
@@ -85,15 +122,41 @@ void TransversityVars::HandleProton(TLorentzVector &StdHepPTLV,
     HMProton.Momentum = StdHepP3Mod;
     HMProton.FourMomentum = StdHepPTLV;
   }
+  if( (StdHepPTLV.E()*(IsInGev?1000.0:1.0)) >
+      __OtherFSProton4Momenta_MeV[kMaxFSMomenta].E() ){
+
+    __OtherFSProton4Momenta_MeV[kMaxFSMomenta] =
+      IsInGev?(StdHepPTLV*1000.0):(StdHepPTLV);
+    std::stable_sort(
+      __OtherFSProton4Momenta_MeV,
+      __OtherFSProton4Momenta_MeV+kMaxFSMomenta+1,
+      [](TLorentzVector const & LHS, TLorentzVector const & RHS) -> bool {
+        return (LHS.E() > RHS.E());
+      }
+    );
+  }
 }
 
 void TransversityVars::HandleCPion(TLorentzVector &StdHepPTLV,
   Double_t &StdHepP3Mod, Int_t pdg){
 
-if(StdHepP3Mod > HMCPion.Momentum){
+  if(StdHepP3Mod > HMCPion.Momentum){
     HMCPion.Momentum = StdHepP3Mod;
     HMCPion.FourMomentum = StdHepPTLV;
     HMCPion.PDG = pdg;
+  }
+  if((pdg == 211) &&
+     ((StdHepPTLV.E()*(IsInGev?1000.0:1.0)) >
+           __OtherFSPiPlus4Momenta_MeV[kMaxFSMomenta].E()) ){
+
+    __OtherFSPiPlus4Momenta_MeV[kMaxFSMomenta] =
+      IsInGev?(StdHepPTLV*1000.0):(StdHepPTLV);
+    std::stable_sort(
+      __OtherFSPiPlus4Momenta_MeV,
+      __OtherFSPiPlus4Momenta_MeV+kMaxFSMomenta+1,
+      [](TLorentzVector const & LHS, TLorentzVector const & RHS) -> bool {
+        return (LHS.E() > RHS.E());
+      });
   }
 }
 
@@ -103,6 +166,34 @@ void TransversityVars::HandleStruckNucleon(TLorentzVector &StdHepPTLV,
   StruckNucleon.Momentum = StdHepP3Mod;
   StruckNucleon.FourMomentum = StdHepPTLV;
   StruckNucleon.PDG = pdg;
+}
+
+
+void TransversityVars::HandleRescat(Int_t PDG, Int_t RescatCode){
+  if(PDG == 2212){
+    switch(RescatCode){
+      case 1:{
+        ProtonRescat_contains_NoInt = true;
+        break;
+      }
+      case 2:{
+        ProtonRescat_contains_chrgEx = true;
+        break;
+      }
+      case 3:{
+        ProtonRescat_contains_elastic = true;
+        break;
+      }
+      case 4:{
+        ProtonRescat_contains_inelastic = true;
+        break;
+      }
+      case 5:{
+        ProtonRescat_contains_knockout = true;
+        break;
+      }
+    }
+  }
 }
 
 bool TransversityVars::HandleStdHepParticle(
@@ -228,55 +319,16 @@ bool TransversityVars::HandleStdHepParticle(
     default:{
       NOtherParticles++;
       NFinalStateParticles++;
-      std::cout << "[INFO]: Found Particle with PDG: " << StdHepPdg
-        << std::endl;
+      if(false){
+        std::cout << "[INFO]: Found Particle with PDG: " << StdHepPdg
+          << std::endl;
+      }
       return false;
       break;
     }
   }
   return true;
 
-}
-
-Double_t GetCauchySmear(TVector3 const & pt, Int_t GaussWidthDeg){
-  static bool first = true;
-  static TF1 *fa1;
-  if(first){
-    fa1 = new TF1("CauchyDist","(1/([0])) * ([1]/(x**2 + [1]))",0,1000);
-  }
-  Float_t gamma = 250.0/pt.Mag();
-  Float_t pig = M_PI*gamma;
-  fa1->SetParameter(0,pig);
-  fa1->SetParameter(1,gamma*gamma);
-
-  return GaussWidthDeg*(fa1->GetRandom());
-}
-
-Double_t PullSmear(TVector3 const & pt, Int_t GaussWidthDeg){
-  // [1] R. Fr uhwirth et al.: Data Analysis Techniques for High-Energy-Physics,
-  // 2nd edition (eds. M. Regler and R. Fr uhwirth), Cambridge University
-  //Press (2000).
-  if(!GaussWidthDeg){ return 0; }
-  static TRandom gaus;
-  constexpr static Float_t c1 = 0.5; //Intrinsic smear
-  constexpr static Float_t c2 = 0.5/(500.0*500.0); // as a func of dpt[1/MeV]
-
-  Double_t ooptm = 1.0/pt.Mag();
-
-  Double_t DeltaPt_Pt2 = GaussWidthDeg*sqrt(c1 + c2*ooptm*ooptm);
-
-  //500MeV has x degree sigma
-
-  return gaus.Gaus(0.0,DeltaPt_Pt2);
-}
-
-Double_t SimpleGSmearMeasure(Double_t const & Meas, Double_t GWidth){
-
-  static TRandom gaus;
-
-  //500MeV has x degree sigma
-
-  return gaus.Gaus(Meas,GWidth);
 }
 
 void TransversityVars::Finalise(){
@@ -446,32 +498,52 @@ void TransversityVars::Finalise(){
   }
 
 //******************************************************************************
-//                       Smeared Sample States
+//                      FS Particle Stuff
 //******************************************************************************
+  auto GetLastNonZeroIndex = [](TLorentzVector (&tlvs)[kMaxFSMomenta+1]) -> Int_t {
+    for(Int_t i = 0; i < (kMaxFSMomenta+1); ++i){
+      if(tlvs[i].Vect().Mag() < 1E-6){
+        return i;
+      }
+    }
+    return (kMaxFSMomenta+1);
+  };
 
-  if(DoSmear && (HMTrackablePt_MeV.Mag() > 1E-6)){
+  //Gets the number of non zero momenta in the array ignoring the highest momenta
+  // particle which is stored in separate variables.
+  NOtherFSPiPlus4Momenta_MeV =
+    GetLastNonZeroIndex(__OtherFSPiPlus4Momenta_MeV) - 1;
+  NOtherFSProton4Momenta_MeV =
+    GetLastNonZeroIndex(__OtherFSProton4Momenta_MeV) - 1;
 
-    Muon_phi_GSmear_deg = SimpleGSmearMeasure(0,SmearingMag_PhiDeg);
-    HMTrackable_phi_GSmear_deg = SimpleGSmearMeasure(0,SmearingMag_PhiDeg);
+  NOtherFSPiPlus4Momenta_MeV =
+    NOtherFSPiPlus4Momenta_MeV < 0 ? 0 : NOtherFSPiPlus4Momenta_MeV;
+  NOtherFSProton4Momenta_MeV =
+    NOtherFSProton4Momenta_MeV < 0 ? 0 : NOtherFSProton4Momenta_MeV;
 
-    TVector3 MuPtSmeared = Muon_Pt_MeV;
-    MuPtSmeared.SetPhi(MuPtSmeared.Phi()+
-      (Muon_phi_GSmear_deg*DegToRad));
+  auto SplitTLV = [](TLorentzVector (&tlvs)[kMaxFSMomenta+1], Double_t* X,
+    Double_t* Y, Double_t* Z, Double_t* T, Int_t N = (kMaxFSMomenta+1)){
+     //Need to ignore the first proton
+     for(Int_t i = 1; i < N; ++i){
+      X[i-1] = tlvs[i].X();
+      Y[i-1] = tlvs[i].Y();
+      Z[i-1] = tlvs[i].Z();
+      T[i-1] = tlvs[i].T();
+     }
+  };
 
-    TVector3 HMTrackableSmeared = HMTrackablePt_MeV;
-    HMTrackableSmeared.SetPhi(HMTrackableSmeared.Phi()+
-      (HMTrackable_phi_GSmear_deg*DegToRad));
-
-    DeltaPhiT_HMTrackable_GSmear_deg = GetDeltaPhiT(MuPtSmeared,
-        HMTrackableSmeared, MuonNeutrino.FourMomentum.Vect())*RadToDeg;
-
-    Muon_MomMag_MeV_GSmear =
-      SimpleGSmearMeasure(Muon.Momentum,SmearingMag_MuMmtmMeV);
-    HMProton_MomMag_MeV_GSmear =
-      SimpleGSmearMeasure(HMProton.Momentum,SmearingMag_PMmtmMeV);
-    HMTrackable_MomMag_MeV_GSmear =
-      SimpleGSmearMeasure(HMTrackable.Momentum,SmearingMag_PMmtmMeV);
-  }
+  SplitTLV( __OtherFSPiPlus4Momenta_MeV,
+          OtherFSPiPlus4Momenta_MeV_X,
+          OtherFSPiPlus4Momenta_MeV_Y,
+          OtherFSPiPlus4Momenta_MeV_Z,
+          OtherFSPiPlus4Momenta_MeV_T,
+          NOtherFSPiPlus4Momenta_MeV);
+  SplitTLV( __OtherFSProton4Momenta_MeV,
+          OtherFSProton4Momenta_MeV_X,
+          OtherFSProton4Momenta_MeV_Y,
+          OtherFSProton4Momenta_MeV_Z,
+          OtherFSProton4Momenta_MeV_T,
+          NOtherFSProton4Momenta_MeV);
 
 //******************************************************************************
 //                       Others and Transients
@@ -516,7 +588,6 @@ void TransversityVars::Reset(){
   Muon_PDG = 0;
   Muon_4Mom_MeV = TLorentzVector(0,0,0,0);
   Muon_Pt_MeV = TVector3(0,0,0);
-  Muon_MomMag_MeV_GSmear = 0;
 
 //First Proton
   FirstProton_PDG = 0;
@@ -526,7 +597,6 @@ void TransversityVars::Reset(){
 //Highest Momentum Proton
   HMProton_PDG = 0;
   HMProton_4Mom_MeV = TLorentzVector(0,0,0,0);
-  HMProton_MomMag_MeV_GSmear = 0;
   HMProton_StdHepPosition = -1;
 
 //Highest Momentum Charged Pion
@@ -536,7 +606,6 @@ void TransversityVars::Reset(){
 //Highest Momentum Trackable
   HMTrackable_PDG = 0;
   HMTrackable_4Mom_MeV = TLorentzVector(0,0,0,0);
-  HMTrackable_MomMag_MeV_GSmear = 0;
 
 //******************************************************************************
 //                       'Verse Variable Values
@@ -546,7 +615,6 @@ void TransversityVars::Reset(){
   DeltaPhiT_HMProton_deg = 0;
   DeltaPhiT_FirstProton_deg = 0;
   DeltaPhiT_HMTrackable_deg = 0;
-  DeltaPhiT_HMTrackable_GSmear_deg = 0;
 
 //DeltaPt
   DeltaPT_HMProton_MeV = TVector3(0,0,0);
@@ -579,13 +647,6 @@ void TransversityVars::Reset(){
   DeltaPTotal_HMProtonPion_MeV = TVector3(0,0,0);
 
 //******************************************************************************
-//                       Smeared Sample States
-//******************************************************************************
-
-  Muon_phi_GSmear_deg = 0;
-  HMTrackable_phi_GSmear_deg = 0;
-
-//******************************************************************************
 //                       Final State Particles
 //******************************************************************************
 
@@ -614,6 +675,23 @@ void TransversityVars::Reset(){
   }
 
 //******************************************************************************
+//                      FS Particle Stuff
+//******************************************************************************
+  ClearArray(__OtherFSPiPlus4Momenta_MeV);
+  ClearArray(__OtherFSProton4Momenta_MeV);
+  ClearArray(OtherFSPiPlus4Momenta_MeV_X,kMaxFSMomenta);
+  ClearArray(OtherFSPiPlus4Momenta_MeV_Y,kMaxFSMomenta);
+  ClearArray(OtherFSPiPlus4Momenta_MeV_Z,kMaxFSMomenta);
+  ClearArray(OtherFSPiPlus4Momenta_MeV_T,kMaxFSMomenta);
+  ClearArray(OtherFSProton4Momenta_MeV_X,kMaxFSMomenta);
+  ClearArray(OtherFSProton4Momenta_MeV_Y,kMaxFSMomenta);
+  ClearArray(OtherFSProton4Momenta_MeV_Z,kMaxFSMomenta);
+  ClearArray(OtherFSProton4Momenta_MeV_T,kMaxFSMomenta);
+
+  NOtherFSPiPlus4Momenta_MeV = 0;
+  NOtherFSProton4Momenta_MeV = 0;
+
+//******************************************************************************
 //                       Tangible Target Traits
 //******************************************************************************
 
@@ -628,6 +706,12 @@ void TransversityVars::Reset(){
 
   CCQ2 = 0xdeadbeef;
 
+  ProtonRescat_contains_NoInt = false;
+  ProtonRescat_contains_chrgEx = false;
+  ProtonRescat_contains_elastic = false;
+  ProtonRescat_contains_inelastic = false;
+  ProtonRescat_contains_knockout = false;
+
   //Transients
   Muon.Reset();
   MuonNeutrino.Reset();
@@ -636,6 +720,380 @@ void TransversityVars::Reset(){
   HMCPion.Reset();
   FirstProton.Reset();
   HMTrackable.Reset();
+
+//******************************************************************************
+//******************************************************************************
+
+}
+
+ClassImp(TransversityVarsLite);
+
+TransversityVarsLite::~TransversityVarsLite(){}
+
+TransversityVarsLite::TransversityVarsLite(
+  bool InGeV){
+
+  IsInGev = InGeV;
+
+  Reset();
+}
+
+void TransversityVarsLite::HandleProton(TLorentzVector &StdHepPTLV,
+  Double_t &StdHepP3Mod, UInt_t &StdHepPosition){
+
+  if(!FirstProton.PDG){
+    FirstProton.PDG = 2212;
+    FirstProton.Momentum = StdHepP3Mod;
+    FirstProton.FourMomentum = StdHepPTLV;
+    FirstProton.StdHepPosition = StdHepPosition;
+
+    HMProton.PDG = 2212;
+    HMProton.Momentum = StdHepP3Mod;
+    HMProton.FourMomentum = StdHepPTLV;
+    HMProton.StdHepPosition = StdHepPosition;
+
+  }
+  else if(StdHepP3Mod > HMProton.Momentum){
+    HMProton.StdHepPosition = StdHepPosition;
+    HMProton.Momentum = StdHepP3Mod;
+    HMProton.FourMomentum = StdHepPTLV;
+  }
+}
+
+void TransversityVarsLite::HandleCPion(TLorentzVector &StdHepPTLV,
+  Double_t &StdHepP3Mod, Int_t pdg){
+
+  if(StdHepP3Mod > HMCPion.Momentum){
+    HMCPion.Momentum = StdHepP3Mod;
+    HMCPion.FourMomentum = StdHepPTLV;
+    HMCPion.PDG = pdg;
+  }
+}
+
+void TransversityVarsLite::HandleStruckNucleon(TLorentzVector &StdHepPTLV,
+  Double_t &StdHepP3Mod, Int_t pdg){
+
+  StruckNucleon.Momentum = StdHepP3Mod;
+  StruckNucleon.FourMomentum = StdHepPTLV;
+  StruckNucleon.PDG = pdg;
+}
+
+bool TransversityVarsLite::HandleStdHepParticle(
+  UInt_t &StdHepPosition,
+  Int_t &StdHepPdg,
+  Int_t &StdHepStatus,
+  Double_t * &StdHepP4){
+
+  TLorentzVector StdHepPTLV = TLorentzVector(
+    StdHepP4[kStdHepIdxPx],
+    StdHepP4[kStdHepIdxPy],
+    StdHepP4[kStdHepIdxPz],
+    StdHepP4[kStdHepIdxE]);
+  Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
+
+  if(StdHepPosition == 0){ //Incomming Neutrino
+    MuonNeutrino.PDG = StdHepPdg;
+    MuonNeutrino.FourMomentum = StdHepPTLV;
+    MuonNeutrino.Momentum = StdHepP3Mod;
+    return true;
+  } else if(StdHepPosition == 1){ //Target Nucleus
+    return true;
+  }
+
+  if(StdHepStatus != 1){return false;}
+  if(StdHepPdg >= 1000000000){return false;} //Should catch nuclear PDGs
+  if(StdHepPdg >= 2000000000){return false;} //GENIE psuedo particles
+
+  switch(StdHepPdg){
+    case -13:
+    case 13:{
+      Muon.PDG = StdHepPdg;
+      Muon.FourMomentum = StdHepPTLV;
+      Muon.Momentum = StdHepP3Mod;
+      NFinalStateParticles++;
+      break;
+    }
+    //NC
+    case -14:
+    case 14:{
+      return false;
+      break;
+    }
+    case 22:{
+      NGammas++;
+      NFinalStateParticles++;
+      break;
+    }
+    case 2212:{
+      HandleProton(StdHepPTLV, StdHepP3Mod, StdHepPosition);
+      NProtons++;
+      NFinalStateParticles++;
+      break;
+    }
+    case 2112:{
+      NNeutrons++;
+      NFinalStateParticles++;
+      break;
+    }
+    case 211:{
+      HandleCPion(StdHepPTLV,StdHepP3Mod,StdHepPdg);
+      NPiPlus++;
+      NChargedPions++;
+      NPions++;
+      NFinalStateParticles++;
+      break;
+    }
+    case -211:{
+      HandleCPion(StdHepPTLV,StdHepP3Mod,StdHepPdg);
+      NPiMinus++;
+      NChargedPions++;
+      NPions++;
+      NFinalStateParticles++;
+      break;
+    }
+    case 111:{
+      NPiZero++;
+      NPions++;
+      NFinalStateParticles++;
+      break;
+    }
+    case 221:
+    case 331:
+    case 130:
+    case 310:
+    case 311:
+    case 321:
+    case -221:
+    case -331:
+    case -130:
+    case -310:
+    case -311:
+    case -321:
+    case 3122: {
+      break;
+    }
+    default:{
+      NOtherParticles++;
+      NFinalStateParticles++;
+      std::cout << "[INFO]: Found Particle with PDG: " << StdHepPdg
+        << std::endl;
+      return false;
+      break;
+    }
+  }
+  return true;
+
+}
+
+void TransversityVarsLite::Finalise(){
+
+  constexpr static Float_t GeVToMeV = 1000.0;
+  constexpr static Float_t RadToDeg = 180.0/M_PI;
+  constexpr static Float_t DegToRad = M_PI/180.0;
+
+  if(IsInGev){
+    Muon.Momentum *= GeVToMeV;
+    Muon.FourMomentum *= GeVToMeV;
+    MuonNeutrino.Momentum *= GeVToMeV;
+    MuonNeutrino.FourMomentum *= GeVToMeV;
+    HMProton.Momentum *= GeVToMeV;
+    HMProton.FourMomentum *= GeVToMeV;
+    FirstProton.Momentum *= GeVToMeV;
+    FirstProton.FourMomentum *= GeVToMeV;
+    HMCPion.Momentum *= GeVToMeV;
+    HMCPion.FourMomentum *= GeVToMeV;
+    StruckNucleon.Momentum *= GeVToMeV;
+    StruckNucleon.FourMomentum *= GeVToMeV;
+  }
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Neutrino
+  IncNeutrino_PDG = MuonNeutrino.PDG;
+  IncNeutrino_4Mom_MeV = MuonNeutrino.FourMomentum;
+
+//Struck Nucleon
+  StruckNucleonPDG = StruckNucleon.PDG;
+  StruckNucleon_4Mom_MeV = StruckNucleon.FourMomentum;
+
+//Muon
+  Muon_PDG = Muon.PDG;
+  Muon_4Mom_MeV = Muon.FourMomentum;
+  TVector3 Muon_Pt_MeV = TransversityUtils::GetVectorInTPlane(
+    Muon.FourMomentum.Vect(),
+    MuonNeutrino.FourMomentum.Vect());
+
+//Highest Momentum Proton
+  HMProton_PDG = HMProton.PDG;
+  HMProton_4Mom_MeV = HMProton.FourMomentum;
+
+//Highest Momentum Charged Pion
+  HMCPion_PDG = HMCPion.PDG;
+  HMCPion_4Mom_MeV = HMCPion.FourMomentum;
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//Projections
+  TVector3 HMProtonPt_MeV = GetVectorInTPlane(HMProton.FourMomentum.Vect(),
+    MuonNeutrino.FourMomentum.Vect());
+
+//DeltaPhiT
+  DeltaPhiT_HMProton_deg = GetDeltaPhiT(
+    Muon.FourMomentum.Vect(), HMProton.FourMomentum.Vect(),
+    MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+
+
+//DeltaPt
+  DeltaPT_HMProton_MeV = GetDeltaPT(Muon_Pt_MeV,
+                                    HMProtonPt_MeV,
+                                    MuonNeutrino.FourMomentum.Vect());
+
+  DeltaPTotal_HMProton_MeV = (Muon.FourMomentum + HMProton.FourMomentum
+    - MuonNeutrino.FourMomentum - StruckNucleon.FourMomentum).Vect();
+
+  DeltaPNuclearEffect_HMProton_MeV = (Muon.FourMomentum + HMProton.FourMomentum
+    - MuonNeutrino.FourMomentum).Vect();
+
+  DeltaPProton_MeV = (Muon.FourMomentum
+    - MuonNeutrino.FourMomentum - StruckNucleon.FourMomentum).Vect();
+
+  DeltaPTargetNucleon_MeV = (Muon.FourMomentum + FirstProton.FourMomentum
+    - MuonNeutrino.FourMomentum).Vect();
+
+//DeltaAlphat
+  DeltaAlphaT_HMProton_deg = GetDeltaAlphaT(Muon_Pt_MeV,
+                                            HMProtonPt_MeV,
+                                            MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+//DeltaP_TT
+  if((HMCPion.Momentum > 1E-3) && (HMProton.Momentum > 1E-3)){
+
+    HMProtonPion_3Mom_MeV = HMProton.FourMomentum.Vect() +
+      HMCPion.FourMomentum.Vect();
+
+    TVector3 HMProtonPionPt_MeV = GetVectorInTPlane(HMProtonPion_3Mom_MeV,
+      MuonNeutrino.FourMomentum.Vect());
+
+    DeltaPhiT_HMProtonPion_deg = GetDeltaPhiT(
+                    Muon.FourMomentum.Vect(),
+                    HMProtonPion_3Mom_MeV,
+                    MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+    DeltaPT_HMProtonPion_MeV = GetDeltaPT(Muon_Pt_MeV,
+                    HMProtonPionPt_MeV,
+                    MuonNeutrino.FourMomentum.Vect());
+    DeltaAlphaT_HMProtonPion_deg = GetDeltaAlphaT(Muon_Pt_MeV,
+                    HMProtonPionPt_MeV,
+                    MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+
+    DeltaPTotal_HMProtonPion_MeV = (Muon.FourMomentum + HMProton.FourMomentum
+      + HMCPion.FourMomentum - MuonNeutrino.FourMomentum
+      - StruckNucleon.FourMomentum).Vect();
+  }
+
+  CCQ2 = (Muon.FourMomentum - MuonNeutrino.FourMomentum).Mag2();
+
+//******************************************************************************
+//******************************************************************************
+}
+
+void TransversityVarsLite::Reset(){
+
+//******************************************************************************
+//                     Event Properties
+//******************************************************************************
+
+//Generator reaction code
+  NeutConventionReactionCode = 0;
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Neutrino
+  IncNeutrino_PDG = 0;
+  IncNeutrino_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+//Struck Nucleon
+  StruckNucleonPDG = 0;
+  StruckNucleon_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+//Muon
+  Muon_PDG = 0;
+  Muon_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+
+//Highest Momentum Proton
+  HMProton_PDG = 0;
+  HMProton_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+//Highest Momentum Charged Pion
+  HMCPion_PDG = 0;
+  HMCPion_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//DeltaPhiT
+  DeltaPhiT_HMProton_deg = 0;
+
+//DeltaPt
+  DeltaPT_HMProton_MeV = TVector3(0,0,0);
+
+//DeltaPTotal
+  DeltaPTotal_HMProton_MeV = TVector3(0,0,0);
+
+//DeltaPNuclearEffect
+  DeltaPNuclearEffect_HMProton_MeV = TVector3(0,0,0);
+
+//DeltaPProton
+  DeltaPProton_MeV = TVector3(0,0,0);
+
+//DeltaPTargetNucleon
+  DeltaPTargetNucleon_MeV = TVector3(0,0,0);
+
+//DeltaAlphat
+  DeltaAlphaT_HMProton_deg = 0;
+
+//ProtonPion Combo Platter
+  HMProtonPion_3Mom_MeV = TVector3(0,0,0);
+  DeltaPhiT_HMProton_deg = 0;
+  DeltaPT_HMProton_MeV = TVector3(0,0,0);
+  DeltaAlphaT_HMProton_deg = 0;
+  DeltaPTotal_HMProtonPion_MeV = TVector3(0,0,0);
+
+//******************************************************************************
+//                       Final State Particles
+//******************************************************************************
+
+  NFinalStateParticles = 0;
+  NProtons = 0;
+  NGammas = 0;
+  NNeutrons = 0;
+  NPiPlus = 0;
+  NPiZero = 0;
+  NPiMinus = 0;
+  NPions = 0;
+  NChargedPions = 0;
+  NOtherParticles = 0;
+
+//******************************************************************************
+//                       Others and Transients
+//******************************************************************************
+
+  CCQ2 = 0xdeadbeef;
+
+  //Transients
+  Muon.Reset();
+  MuonNeutrino.Reset();
+  StruckNucleon.Reset();
+  HMProton.Reset();
+  HMCPion.Reset();
+  FirstProton.Reset();
 
 //******************************************************************************
 //******************************************************************************

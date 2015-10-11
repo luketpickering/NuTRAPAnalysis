@@ -38,6 +38,7 @@ Int_t G2NeutEvtCode;
 Int_t GStdHepN;
 Int_t GStdHepPdg[kGStdHepNPmax];
 Int_t GStdHepStatus[kGStdHepNPmax];
+Int_t GStdHepRescat[kGStdHepNPmax];
 Double_t GStdHepP4[kGStdHepNPmax][4];
 
 Int_t Gi2NeutEvtCode;
@@ -54,11 +55,7 @@ namespace {
 
   int Verbosity = 1;
   bool OutputInGev;
-  int SmearDegrees = 0;
-  int Smear_Mom_Mu_MeV = 0;
-  int Smear_Mom_P_MeV = 0;
-  Double_t TargetBE_MeV = 0;
-  bool DoSmear = false;
+  bool LiteOutput = false;
 
   Int_t NThresh = 0;
   Int_t Threshs_MeV[kNThreshMax];
@@ -77,8 +74,13 @@ namespace {
   Int_t* StdHepPdg = 0;
   Double_t** StdHepP4 = 0;
   Int_t* StdHepStatus = 0;
+  Int_t* StdHepRescat = 0;
+
+  Float_t TargetBE_MeV = 0xdeadbeef;
 
   int NeutConventionReactionCode;
+
+  std::vector<int> ModeIgnores;
 
 } // namespace
 
@@ -102,6 +104,7 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
     StdHepPdg = GeneratorDependent::GStdHepPdg;
     StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
     StdHepStatus = GeneratorDependent::GStdHepStatus;
+    StdHepRescat = GeneratorDependent::GStdHepRescat;
     TreeName = "gRooTracker";
     Generator = kGENIE;
     std::cout << "Working on GENIE Tree: " << TreeName
@@ -185,6 +188,8 @@ int ProcessRootrackerToTransversityVariables(
         GeneratorDependent::GStdHepP4);
       RooTrackerChain->SetBranchAddress("StdHepStatus",
         GeneratorDependent::GStdHepStatus);
+      RooTrackerChain->SetBranchAddress("StdHepRescat",
+        GeneratorDependent::GStdHepRescat);
       break;
     }
     case kNuWro:{
@@ -228,11 +233,19 @@ int ProcessRootrackerToTransversityVariables(
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  TransversityVars* OutInfoCCQEFSI =
-    new TransversityVars(OutputInGev, TargetBE_MeV,
-      NThresh, Threshs_MeV, SmearDegrees, Smear_Mom_Mu_MeV, Smear_Mom_P_MeV, DoSmear,
-      generatorName);
-  outTreePureSim->Branch("TransV", &OutInfoCCQEFSI);
+  TransversityVarsB* OutObjectInfo;
+  if(LiteOutput) {
+    TransversityVarsLite* OutObjectInfo_obj = new TransversityVarsLite(OutputInGev);
+    outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
+    OutObjectInfo = OutObjectInfo_obj;
+
+  } else {
+    TransversityVars* OutObjectInfo_obj =
+      new TransversityVars(OutputInGev, TargetBE_MeV,
+        NThresh, Threshs_MeV, generatorName);
+    outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
+    OutObjectInfo = OutObjectInfo_obj;
+  }
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :
@@ -241,7 +254,7 @@ int ProcessRootrackerToTransversityVariables(
   for(long long i = 0; i < doEntries; ++i){
     RooTrackerChain->GetEntry(i);
 
-    OutInfoCCQEFSI->Reset();
+    OutObjectInfo->Reset();
     if(!(i%10000)){
       std::cout << "On entry: " << i  << "/" << doEntries << std::endl;
     }
@@ -280,9 +293,8 @@ int ProcessRootrackerToTransversityVariables(
       }
     }
 
-    OutInfoCCQEFSI->SetNeutConventionReactionCode(NeutConventionReactionCode);
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
-      OutInfoCCQEFSI->HandleStdHepParticle(partNum, StdHepPdg[partNum],
+      OutObjectInfo->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
 
       //Struck Nucleon kinematics are stored differently for the different
@@ -296,12 +308,33 @@ int ProcessRootrackerToTransversityVariables(
               StdHepP4[partNum][kStdHepIdxPz],
               StdHepP4[partNum][kStdHepIdxE]);
             Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-            OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod, 0);
+            Int_t StruckNucleonPDGGuess = 0;
+            Double_t StruckNucleonMass = StdHepPTLV.M();
+            if(StruckNucleonMass < 0.939 && StruckNucleonMass > 0.938){
+              StruckNucleonPDGGuess = 2212;
+            } else if(StruckNucleonMass < 0.940 && StruckNucleonMass > 0.939){
+              StruckNucleonPDGGuess = 2112;
+            } else if(StruckNucleonMass > 1E-6 &&
+                      NeutConventionReactionCode == 11){
+              std::cout << "[WARN]: Found struck nucleon with mass: "
+                << StruckNucleonMass << ", reaction code: "
+                << NeutConventionReactionCode << std::endl;
+            }
+            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
+              StruckNucleonPDGGuess);
           }
           break;
         }
-        case kNEUT:
         case kGENIE:{
+          if(LiteOutput){
+            if(StdHepStatus[partNum] == 14){
+              OutObjectInfo->HandleRescat(StdHepPdg[partNum],
+                StdHepRescat[partNum]);
+            }
+          }
+          break;
+        }
+        case kNEUT:{
           if(StdHepStatus[partNum]==11){
             TLorentzVector StdHepPTLV = TLorentzVector(
               StdHepP4[partNum][kStdHepIdxPx],
@@ -309,7 +342,7 @@ int ProcessRootrackerToTransversityVariables(
               StdHepP4[partNum][kStdHepIdxPz],
               StdHepP4[partNum][kStdHepIdxE]);
             Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-            OutInfoCCQEFSI->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
+            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
               StdHepPdg[partNum]);
           }
           break;
@@ -320,34 +353,31 @@ int ProcessRootrackerToTransversityVariables(
       }
 
     }
-    OutInfoCCQEFSI->Finalise();
 
-    if(Verbosity>1){
-      std::cout << "**"
-"******************************************************************************"
-        << "\n\t#Ev: " << i << "\n"
-        << " (OutInfoCCQEFSI->ProtonMom_HighestMomProton == "
-        << OutInfoCCQEFSI->HMProton.Momentum << " [MeV/C]): " << "\n**"
-"******************************************************************************"
-        << std::endl;
-      std::cout << "NParticles: " << (*StdHepN) << " - (Neut Reac Code: "
-        << NeutConventionReactionCode << ")" << std::endl;
-      std::cout << "Struck Nucleon { Momentum: "
-        << OutInfoCCQEFSI->StruckNucleon.Momentum
-        << ", PDG: " << OutInfoCCQEFSI->StruckNucleon.PDG << "}" << std::endl;
+    OutObjectInfo->Finalise();
 
-        std::cout << "------\nTransverse Variables"
-        << "\n\t DeltaP:" << OutInfoCCQEFSI->DeltaPTotal_HMProton_MeV.Mag()
-        << "\n\tP_0^p: " <<  OutInfoCCQEFSI->DeltaPProton_MeV.Mag()
-        << "\n------" << std::endl;
-
-      for(int partNum = 0; partNum < (*StdHepN); ++partNum){
-        std::cout << "\t" << partNum << ": " << StdHepPdg[partNum]
-          << " (Status==" << StdHepStatus[partNum] << ") "
-          << PGUtils::PrintArray(StdHepP4[partNum],4) << std::endl;
-      }
+    //Bumps up the code for non-Delta++ resonances for incoming numus.
+    if((OutObjectInfo->GetIncNeutrino_PDG() == 14) &&
+      (Generator == kNuWro) &&
+      (NeutConventionReactionCode == 11) &&
+      (OutObjectInfo->GetStruckNucleonPDG() != 2212) ){
+      OutObjectInfo->SetNeutConventionReactionCode(12);
+    } else {
+      OutObjectInfo->SetNeutConventionReactionCode(NeutConventionReactionCode);
     }
 
+    if(ModeIgnores.size()){
+      bool found = false;
+      for(auto const & mi : ModeIgnores){
+        if(mi == OutObjectInfo->GetNeutConventionReactionCode()){
+          found = true;
+          break;
+        }
+      }
+      if(!found){
+        continue;
+      }
+    }
     outTreePureSim->Fill();
   }
   outTreePureSim->Write();
@@ -361,7 +391,7 @@ int ProcessRootrackerToTransversityVariables(
   delete RooTrackerChain;
   delete outFile;
   delete [] StdHepP4;
-  delete OutInfoCCQEFSI;
+  delete OutObjectInfo;
 }
 
 namespace {
@@ -445,7 +475,7 @@ void SetOpts(){
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
         std::cout << "\t--Added EKin threshold: " << vbhold << " MeV" << std::endl;
-        if(NThresh>0 && (vbhold <= Threshs_MeV[NThresh-1])){
+        if(NThresh>0 && (vbhold < Threshs_MeV[NThresh-1])){
           std::cout << "[ERROR]: Attempting to add EKin threshold at " << vbhold
             << " MeV, but the previous one at " << Threshs_MeV[NThresh-1]
             << " is lower.\n\tThresholds must be added in ascending order."
@@ -460,44 +490,23 @@ void SetOpts(){
     }, false,
     [&](){}, "<int> Add EKin threshold [MeV] {default=N/A}");
 
-  CLIArgs::OptSpec.emplace_back("-P", "--Phi-Smear", true,
+    CLIArgs::OptSpec.emplace_back("-M", "--Modes", true,
     [&] (std::string const &opt) -> bool {
-      int vbhold;
-      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Smear track angle by: " << vbhold << " degrees" << std::endl;
-        SmearDegrees = vbhold;
-        DoSmear = true;
-        return true;
-      }
-      return false;
-    }, false,
-    [&](){SmearDegrees = 0; DoSmear = false;}, "<int> Gaussian smear width [degrees] {default=0}");
+      ModeIgnores =
+        PGUtils::StringVToIntV(PGUtils::SplitStringByDelim(opt,","));
 
-  CLIArgs::OptSpec.emplace_back("-Sp", "--Mom-Proton-Smear", true,
-    [&] (std::string const &opt) -> bool {
-      int vbhold;
-      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Smear measured proton momentum by: " << vbhold << " MeV" << std::endl;
-        Smear_Mom_P_MeV = vbhold;
-        DoSmear = true;
+      if(ModeIgnores.size()){
+        std::cout << "\t--Ignoring interactions except of the modes:  " << std::flush;
+        for(auto const &mi : ModeIgnores){
+          std::cout << mi << ", " << std::flush;
+        }
+        std::cout << std::endl;
         return true;
       }
       return false;
     }, false,
-    [&](){Smear_Mom_P_MeV = 0;}, "<int> Gaussian smear Proton Momenta by [MeV] {default=0.0}");
-
-  CLIArgs::OptSpec.emplace_back("-Smu", "--Mom-Muon-Smear", true,
-    [&] (std::string const &opt) -> bool {
-      int vbhold;
-      if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Smear measured muon momentum by: " << vbhold << " MeV" << std::endl;
-        Smear_Mom_Mu_MeV = vbhold;
-        DoSmear = true;
-        return true;
-      }
-      return false;
-    }, false,
-    [&](){Smear_Mom_P_MeV = 0;}, "<int> Gaussian smear Muon Momenta by [MeV] {default=0.0}");
+    [](){},
+    "<int,int,...> NEUT modes to save output from.");
 
   CLIArgs::OptSpec.emplace_back("-B", "--Binding-Energy", true,
     [&] (std::string const &opt) -> bool {
@@ -512,9 +521,18 @@ void SetOpts(){
     }, false,
     [&](){TargetBE_MeV = 0xdeadbeef;},
     "<float> Binding energy used in nu_erec calculations [MeV] {default=25.0}");
-}
-}
 
+    CLIArgs::OptSpec.emplace_back("-L", "--Lite-Output", false,
+    [&] (std::string const &opt) -> bool {
+      LiteOutput = true;
+      std::cout << "\t--Outputting Lite format." << std::endl;
+      return true;
+    }, false,
+    [](){LiteOutput = false;},
+    "Will output in Lite mode which contains less output variables.");
+
+}
+}
 
 int main(int argc, char const * argv[]){
   SetOpts();
