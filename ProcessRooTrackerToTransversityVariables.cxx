@@ -401,20 +401,15 @@ std::string GeneratorName="NEUT";
 long MaxEntries=-1;
 
 void SetOpts(){
-  CLIArgs::OptSpec.emplace_back("-h","--help", false,
-    [&] (std::string const &opt) -> bool {
-      CLIArgs::SayRunLike();
-      exit(0);
-    });
 
-  CLIArgs::OptSpec.emplace_back("-i", "--input-file", true,
+  CLIArgs::AddOpt("-i", "--input-file", true,
     [&] (std::string const &opt) -> bool {
       std::cout << "\t--Reading from file descriptor : " << opt << std::endl;
       InputName = opt;
       return true;
     }, true,[](){},"<TChain::Add descriptor>");
 
-  CLIArgs::OptSpec.emplace_back("-o", "--output-file", true,
+  CLIArgs::AddOpt("-o", "--output-file", true,
     [&] (std::string const &opt) -> bool {
       std::cout << "\t--Writing to File: " << opt << std::endl;
       OutputName = opt;
@@ -423,7 +418,7 @@ void SetOpts(){
     [&](){OutputName = "TransverseVars.root";},
     "<File Name>{default=TransverseVars.root}");
 
-  CLIArgs::OptSpec.emplace_back("-n", "--nentries", true,
+  CLIArgs::AddOpt("-n", "--nentries", true,
     [&] (std::string const &opt) -> bool {
       long vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
@@ -438,7 +433,7 @@ void SetOpts(){
     }, false,
     [&](){MaxEntries = -1;}, "<-1>: Read all {default=-1}");
 
-  CLIArgs::OptSpec.emplace_back("-v", "--verbosity", true,
+  CLIArgs::AddOpt("-v", "--verbosity", true,
     [&] (std::string const &opt) -> bool {
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
@@ -449,7 +444,7 @@ void SetOpts(){
       return false;
     }, false,
     [&](){Verbosity = 0;}, "<0-4>{default=0}");
-  CLIArgs::OptSpec.emplace_back("-M", "--MeV-mode", false,
+  CLIArgs::AddOpt("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
       std::cout << "\t--Reading in MeV." << std::endl;
       OutputInGev = false;
@@ -457,7 +452,7 @@ void SetOpts(){
     }, false,
     [&](){OutputInGev = true;}, "Assume input is in MeV.{default=false}");
 
-  CLIArgs::OptSpec.emplace_back("-g", "--generator", true,
+  CLIArgs::AddOpt("-g", "--generator", true,
     [&] (std::string const &opt) -> bool {
       std::cout << "\t--Attempting to read generator: " << opt << std::endl;
       GeneratorName = opt;
@@ -465,7 +460,7 @@ void SetOpts(){
     }, false,
     [&](){GeneratorName = "NEUT";}, "{default=NEUT}");
 
-  CLIArgs::OptSpec.emplace_back("-m", "--EKin-Threshold", true,
+  CLIArgs::AddOpt("-m", "--EKin-Threshold", true,
     [&] (std::string const &opt) -> bool {
       if(NThresh==kNThreshMax){
         std::cout << "[ERROR]: Tried to add too many momentum thresholds."
@@ -490,7 +485,7 @@ void SetOpts(){
     }, false,
     [&](){}, "<int> Add EKin threshold [MeV] {default=N/A}");
 
-    CLIArgs::OptSpec.emplace_back("-N", "--NEUT-Modes", true,
+    CLIArgs::AddOpt("-N", "--NEUT-Modes", true,
     [&] (std::string const &opt) -> bool {
       ModeIgnores =
         PGUtils::StringVToIntV(PGUtils::SplitStringByDelim(opt,","));
@@ -509,7 +504,7 @@ void SetOpts(){
     [](){},
     "<int,int,...> NEUT modes to save output from.");
 
-  CLIArgs::OptSpec.emplace_back("-B", "--Binding-Energy", true,
+  CLIArgs::AddOpt("-B", "--Binding-Energy", true,
     [&] (std::string const &opt) -> bool {
       float vbhold = std::stof(opt);
       if(vbhold){
@@ -523,7 +518,7 @@ void SetOpts(){
     [&](){TargetBE_MeV = 0xdeadbeef;},
     "<float> Binding energy used in nu_erec calculations [MeV] {default=25.0}");
 
-    CLIArgs::OptSpec.emplace_back("-L", "--Lite-Output", false,
+    CLIArgs::AddOpt("-L", "--Lite-Output", false,
     [&] (std::string const &opt) -> bool {
       LiteOutput = true;
       std::cout << "\t--Outputting Lite format." << std::endl;
@@ -539,7 +534,7 @@ int main(int argc, char const * argv[]){
   SetOpts();
 
   CLIArgs::AddArguments(argc,argv);
-  if(!CLIArgs::GetOpts()){
+  if(!CLIArgs::HandleArgs()){
     CLIArgs::SayRunLike();
     return 1;
   }
