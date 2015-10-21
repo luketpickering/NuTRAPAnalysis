@@ -12,7 +12,7 @@ TDICTHEADERS := TransversityVariableObjects_dict.h
 TOBJO := $(TOBJS:.cxx=.o)
 TOBJO += TransversityVariableObjects_dict.o
 
-UTILSLOC=../../utils
+UTILSLOC=../utils
 UTILSDEPSO=libPureGenUtils.so
 
 TARGET := ProcessRooTrackerToTransversityVariables.exe
