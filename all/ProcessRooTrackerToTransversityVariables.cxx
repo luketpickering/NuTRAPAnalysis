@@ -451,11 +451,11 @@ void SetOpts(){
     [&](){Verbosity = 0;}, "<0-4>{default=0}");
   CLIArgs::OptSpec.emplace_back("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
-      std::cout << "\t--Outputting in MeV." << std::endl;
+      std::cout << "\t--Reading in MeV." << std::endl;
       OutputInGev = false;
       return true;
     }, false,
-    [&](){OutputInGev = true;}, "Use MeV rather than GeV.{default=false}");
+    [&](){OutputInGev = true;}, "Assume input is in MeV.{default=false}");
 
   CLIArgs::OptSpec.emplace_back("-g", "--generator", true,
     [&] (std::string const &opt) -> bool {
@@ -490,13 +490,14 @@ void SetOpts(){
     }, false,
     [&](){}, "<int> Add EKin threshold [MeV] {default=N/A}");
 
-    CLIArgs::OptSpec.emplace_back("-M", "--Modes", true,
+    CLIArgs::OptSpec.emplace_back("-N", "--NEUT-Modes", true,
     [&] (std::string const &opt) -> bool {
       ModeIgnores =
         PGUtils::StringVToIntV(PGUtils::SplitStringByDelim(opt,","));
 
       if(ModeIgnores.size()){
-        std::cout << "\t--Ignoring interactions except of the modes:  " << std::flush;
+        std::cout << "\t--Ignoring interactions except of the modes:  "
+          << std::flush;
         for(auto const &mi : ModeIgnores){
           std::cout << mi << ", " << std::flush;
         }

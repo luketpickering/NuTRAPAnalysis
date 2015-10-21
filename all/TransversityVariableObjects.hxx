@@ -136,12 +136,12 @@ public:
   TVector3 DeltaPT_FirstProton_MeV;
 
 //DeltaPTotal
-  TVector3 DeltaPTotal_HMProton_MeV;
-  TVector3 DeltaPTotal_FirstProton_MeV;
+  TLorentzVector DeltaPTotal_HMProton_MeV;
+  TLorentzVector DeltaPTotal_FirstProton_MeV;
 
 //DeltaPNuclearEffect
-  TVector3 DeltaPNuclearEffect_HMProton_MeV;
-  TVector3 DeltaPNuclearEffect_FirstProton_MeV;
+  TLorentzVector DeltaPNuclearEffect_HMProton_MeV;
+  TLorentzVector DeltaPNuclearEffect_FirstProton_MeV;
 
 //DeltaPProton
   TVector3 DeltaPProton_MeV;
@@ -162,7 +162,7 @@ public:
   Double_t DeltaPhiT_HMProtonPion_deg;
   TVector3 DeltaPT_HMProtonPion_MeV;
   Double_t DeltaAlphaT_HMProtonPion_deg;
-  TVector3 DeltaPTotal_HMProtonPion_MeV;
+  TLorentzVector DeltaPTotal_HMProtonPion_MeV;
 
 
 //******************************************************************************
@@ -191,6 +191,17 @@ public:
   Int_t NAboveThresholdPiZero[kNThreshMax];
   Int_t NAboveThresholdNeutrals[kNThreshMax];
   Int_t NAboveThresholdExotic[kNThreshMax];
+
+  Int_t NInEKinBinProtons[kNThreshMax];
+  Int_t NInEKinBinGammas[kNThreshMax];
+  Int_t NInEKinBinPiPlus[kNThreshMax];
+  Int_t NInEKinBinPiMinus[kNThreshMax];
+  Int_t NInEKinBinChargedPions[kNThreshMax];
+  Int_t NInEKinBinTrackable[kNThreshMax];
+  Int_t NInEKinBinNeutrons[kNThreshMax];
+  Int_t NInEKinBinPiZero[kNThreshMax];
+  Int_t NInEKinBinNeutrals[kNThreshMax];
+  Int_t NInEKinBinExotic[kNThreshMax];
 
 //******************************************************************************
 //                      FS Particle Stuff
@@ -335,10 +346,10 @@ public:
   TVector3 DeltaPT_HMProton_MeV;
 
 //DeltaPTotal
-  TVector3 DeltaPTotal_HMProton_MeV;
+  TLorentzVector DeltaPTotal_HMProton_MeV;
 
 //DeltaPNuclearEffect
-  TVector3 DeltaPNuclearEffect_HMProton_MeV;
+  TLorentzVector DeltaPNuclearEffect_HMProton_MeV;
 
 //DeltaPProton
   TVector3 DeltaPProton_MeV;
@@ -349,12 +360,15 @@ public:
 //DeltaAlphat
   Double_t DeltaAlphaT_HMProton_deg;
 
+//DeltaP_TT
+  Double_t DeltaP_TT;
+
 //ProtonPion Combo Platter
   TVector3 HMProtonPion_3Mom_MeV;
   Double_t DeltaPhiT_HMProtonPion_deg;
   TVector3 DeltaPT_HMProtonPion_MeV;
   Double_t DeltaAlphaT_HMProtonPion_deg;
-  TVector3 DeltaPTotal_HMProtonPion_MeV;
+  TLorentzVector DeltaPTotal_HMProtonPion_MeV;
 
 
 //******************************************************************************
@@ -405,9 +419,7 @@ public:
                             Double_t * &StdHepP4);
   void HandleStruckNucleon(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod, Int_t pdg);
-  void HandleRescat(Int_t PDG, Int_t RescatCode) {
-    throw ENotImplemented("TransversityVarsLite::HandleRescat");
-  }
+  void HandleRescat(Int_t PDG, Int_t RescatCode) {}
   void Finalise();
   void Reset();
 
