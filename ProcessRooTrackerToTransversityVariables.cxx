@@ -431,7 +431,7 @@ void SetOpts(){
       }
       return false;
     }, false,
-    [&](){MaxEntries = -1;}, "<-1>: Read all {default=-1}");
+    [&](){MaxEntries = -1;}, "<int>: Read all {default=-1}");
 
   CLIArgs::AddOpt("-v", "--verbosity", true,
     [&] (std::string const &opt) -> bool {
@@ -531,7 +531,12 @@ void SetOpts(){
 }
 
 int main(int argc, char const * argv[]){
-  SetOpts();
+  try {
+    SetOpts();
+  } catch (std::exception const & e){
+    std::cerr << "[ERROR]: " << e.what() << std::endl;
+    return 1;
+  }
 
   CLIArgs::AddArguments(argc,argv);
   if(!CLIArgs::HandleArgs()){
