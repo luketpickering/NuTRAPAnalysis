@@ -8,11 +8,11 @@ else
   SETUPDIR=$(readlink -f ${BASH_SOURCE%/*})
 fi
 
-if ! [[ ":$PATH:" == *":${SETUPDIR}/bin:"* ]]; then
-  export PATH=${SETUPDIR}/bin:$PATH
+if ! [[ ":$PATH:" == *":${SETUPDIR}/NuTRAPAnalysis/bin:"* ]]; then
+  export PATH=${SETUPDIR}/NuTRAPAnalysis/bin:$PATH
 fi
-if ! [[ ":$LD_LIBRARY_PATH:" == *":${SETUPDIR}/lib:"* ]]; then
-  export LD_LIBRARY_PATH=${SETUPDIR}/lib:$LD_LIBRARY_PATH
+if ! [[ ":$LD_LIBRARY_PATH:" == *":${SETUPDIR}/NuTRAPAnalysis/lib:"* ]]; then
+  export LD_LIBRARY_PATH=${SETUPDIR}/NuTRAPAnalysis/lib:$LD_LIBRARY_PATH
 fi
 
 unset SETUPDIR

@@ -13,9 +13,10 @@ TOBJO := $(TOBJS:.cxx=.o)
 TOBJO += TransversityVariableObjects_dict.o
 
 UTILSLOC=../utils
-UTILSDEPSO=libPureGenUtils.so
+LIBUTILS=libPureGenUtils.so
+UTILSDEPSO:=$(UTILSLOC)/lib/$(LIBUTILS)
 
-TARGET := ProcessRooTrackerToTransversityVariables.exe
+TARGET := NuTRAPAnalysis.exe
 TARGETSRC := $(TARGET:.exe=.cxx)
 
 ROOTCFLAGS := `$(RC) --cflags`
@@ -29,31 +30,31 @@ LDFLAGS := $(ROOTLDFLAGS) -Wl,-rpath=.
 all: $(TARGET)
 	mkdir -p $(BDIR) $(LDIR)
 	mv $(TARGET) $(BDIR)/
-	mv $(UTILSDEPSO) $(LDIR)/
+	mv $(LIBUTILS) $(LDIR)/
 	@echo ""
 	@echo "*********************************************************************"
-	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
+	@echo "Success. Built NuTRAPAnalysis."
 	@echo "*********************************************************************"
 
 wtests: $(TARGET) tests
 	./TransversityTests.exe
 	mkdir -p $(BDIR) $(LDIR)
 	mv $(TARGET) $(BDIR)/
-	mv $(UTILSDEPSO) $(LDIR)/
+	mv $(LIBUTILS) $(LDIR)/
 	@echo ""
 	@echo "*********************************************************************"
-	@echo "Success. Built ProcessRooTrackerToTransversityVariables."
+	@echo "Success. Built NuTRAPAnalysis."
 	@echo "*********************************************************************"
 
-
-$(UTILSDEPSO):
-	ln -s `readlink -f $(UTILSLOC)/lib/$@` $@
+$(LIBUTILS):
+	cd $(UTILSLOC); $(MAKE)
+	ln -s `readlink -f $(UTILSDEPSO)` $@
 
 tests: TransversityUnitTests.cxx TransversityUtils.o
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) $(LDFLAGS) TransversityUnitTests.cxx TransversityUtils.o
 
-$(TARGET): $(TARGETSRC) $(TOBJO) $(UTILSDEPSO)
-	$(CXX) -o $@ -I$(UTILSLOC) $(CXXFLAGS) $(LDFLAGS) $(TARGETSRC) $(TOBJO) $(UTILSDEPSO)
+$(TARGET): $(TARGETSRC) $(TOBJO) $(LIBUTILS)
+	$(CXX) -o $@ -I$(UTILSLOC) $(CXXFLAGS) $(LDFLAGS) $(TARGETSRC) $(TOBJO) $(LIBUTILS)
 
 TransversityVariableObjects_dict.o: TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h TransversityUtils.o
 	$(RCINT) -f TransversityVariableObjects_dict.cxx -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
@@ -69,7 +70,8 @@ clean:
 	rm -rf $(TOBJDICTS)\
         $(TDICTHEADERS)\
         $(TOBJO)\
-        $(UTILSDEPSO)\
+        $(LIBUTILS)\
         $(TARGET)\
         $(BDIR) \
         $(LDIR)
+	cd $(UTILSLOC); $(MAKE) clean
