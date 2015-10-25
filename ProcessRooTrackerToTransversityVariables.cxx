@@ -308,8 +308,10 @@ int ProcessRootrackerToTransversityVariables(
               StdHepP4[partNum][kStdHepIdxPz],
               StdHepP4[partNum][kStdHepIdxE]);
             Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
+
             Int_t StruckNucleonPDGGuess = 0;
             Double_t StruckNucleonMass = StdHepPTLV.M();
+
             if(StruckNucleonMass < 0.939 && StruckNucleonMass > 0.938){
               StruckNucleonPDGGuess = 2212;
             } else if(StruckNucleonMass < 0.940 && StruckNucleonMass > 0.939){
@@ -356,16 +358,32 @@ int ProcessRootrackerToTransversityVariables(
 
     OutObjectInfo->Finalise();
 
-    //Bumps up the code for non-Delta++ resonances for incoming numus.
-    if((OutObjectInfo->GetIncNeutrino_PDG() == 14) &&
+    //Bumps up the code for non-Delta++ resonances for incoming neutrinos.
+    if((OutObjectInfo->GetIncNeutrino_PDG() > 0) &&
       (Generator == kNuWro) &&
       (NeutConventionReactionCode == 11) &&
       (OutObjectInfo->GetStruckNucleonPDG() != 2212) ){
       OutObjectInfo->SetNeutConventionReactionCode(12);
+    //Fixes broken neutrino codes.
+    } else if( (OutObjectInfo->GetIncNeutrino_PDG() < 0) &&
+               (NeutConventionReactionCode > 0) ) {
+      //want antinu codes to be < 0
+       OutObjectInfo->SetNeutConventionReactionCode(
+        -1*NeutConventionReactionCode);
+
+      //Fixes the code for antinu Delta0 resonances.
+      if( (Generator == kNuWro) &&
+          (NeutConventionReactionCode == 11) &&
+          (OutObjectInfo->GetStruckNucleonPDG() == 2212) ){
+
+        OutObjectInfo->SetNeutConventionReactionCode(
+          -13);
+      }
     } else {
       OutObjectInfo->SetNeutConventionReactionCode(NeutConventionReactionCode);
     }
 
+    //Skips modes that we don't want to deal with.
     if(ModeIgnores.size()){
       bool found = false;
       for(auto const & mi : ModeIgnores){
