@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+#ROOT
+*_dict.h
+*_dict.cxx
