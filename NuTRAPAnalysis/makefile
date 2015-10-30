@@ -51,7 +51,7 @@ tests: TransversityUnitTests.cxx TransversityUtils.o
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) TransversityUnitTests.cxx TransversityUtils.o $(LDFLAGS)
 
 $(TARGET): $(TARGETSRC) $(TOBJO) $(LIBUTILS)
-	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ -I$(UTILSLOC) $(TOBJO) $(LIBUTILS) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
 
 TransversityVariableObjects_dict.o: TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h TransversityUtils.hxx
 	$(RCINT) -f TransversityVariableObjects_dict.cxx -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
