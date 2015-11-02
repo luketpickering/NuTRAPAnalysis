@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iomanip>
 
 #include "TChain.h"
 #include "TH1D.h"
@@ -90,8 +91,14 @@ int main(int argc, char const * argv[]){
   TH1D* QEEtaDeltaE = ToPDF(QE);
 
   Double_t integral_QE = 0;
-  for(Int_t i = 0; i < QE->GetNbinsX()+1; ++i){
-    integral_QE = QE->GetBinWidth(i) * QE->GetBinCenter(i) * QEEtaDeltaE->GetBinContent(i) * (1.0 - (QE_NE->GetBinContent(i)/QE->GetBinContent(i)) );
+  for(Int_t i = 1; i < QE->GetNbinsX()+1; ++i){
+    std::cout << "[" << std::setw(3) << i << "] BW: "
+      << QE->GetBinWidth(i) << ", DeltaE: " << QE->GetBinCenter(i)
+      << ", eta(DE): " << QEEtaDeltaE->GetBinContent(i)
+      << ", [1-P(DE)]: "
+      << (1.0 - (QE_NE->GetBinContent(i)/QE->GetBinContent(i)) ) << std::endl;
+    integral_QE += QE->GetBinWidth(i) * QE->GetBinCenter(i) * QEEtaDeltaE->GetBinContent(i) * (1.0 - (QE_NE->GetBinContent(i)/QE->GetBinContent(i)) );
+    std::cout << "\\int_{" << QE->GetBinLowEdge(1) << "}^{" << (QE->GetBinLowEdge(i)+QE->GetBinWidth(i)) << "} = " << integral_QE << std::endl;
   }
   integral_QE *= (N_QE_DP/N_QE);
 
@@ -107,8 +114,8 @@ int main(int argc, char const * argv[]){
   TH1D* RESEtaDeltaE = ToPDF(RES);
 
   Double_t integral_RES = 0;
-  for(Int_t i = 0; i < RES->GetNbinsX()+1; ++i){
-    integral_RES = RES->GetBinWidth(i) * RES->GetBinCenter(i) * RESEtaDeltaE->GetBinContent(i) * (1.0 - (RES_NE->GetBinContent(i)/RES->GetBinContent(i)) );
+  for(Int_t i = 1; i < RES->GetNbinsX()+1; ++i){
+    integral_RES += RES->GetBinWidth(i) * RES->GetBinCenter(i) * RESEtaDeltaE->GetBinContent(i) * (1.0 - (RES_NE->GetBinContent(i)/RES->GetBinContent(i)) );
   }
   integral_RES *= (N_RES_DP/N_RES);
 
