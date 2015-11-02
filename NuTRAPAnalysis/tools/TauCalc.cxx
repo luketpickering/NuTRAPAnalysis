@@ -44,7 +44,7 @@ int main(int argc, char const * argv[]){
   std::cout << "In File: " << InputFileDescriptor << std::endl;
   std::cout << "Taus:" << std::endl;
   std::cout << "\tQE: " << (N_QE_DP/N_QE) << " = (" << N_QE_DP << "/" << N_QE << ")" << std::endl;
-  std::cout << "\tQE: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/" << N_RES << ")" << std::endl;
+  std::cout << "\tRES: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/" << N_RES << ")" << std::endl;
 
   delete TRAPChain;
   return 0;

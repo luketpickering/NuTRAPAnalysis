@@ -78,14 +78,14 @@ int main(int argc, char const * argv[]){
   std::cout << "In File: " << InputFileDescriptor << std::endl;
   std::cout << "Taus:" << std::endl;
   std::cout << "\tQE: " << (N_QE_DP/N_QE) << " = (" << N_QE_DP << "/" << N_QE << ")" << std::endl;
-  std::cout << "\tQE: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/" << N_RES << ")" << std::endl;
+  std::cout << "\tRES: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/" << N_RES << ")" << std::endl;
 
 
   TH1D* QE_NE = new TH1D("QE_NE","",100,0,100);
   TH1D* QE = new TH1D("QE","",100,0,100);
 
-  TRAPChain->Draw("-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
-  TRAPChain->Draw("-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
+  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
+  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
 
   TH1D* QEEtaDeltaE = ToPDF(QE);
 
@@ -101,8 +101,8 @@ int main(int argc, char const * argv[]){
   TH1D* RES_NE = new TH1D("RES_NE","",100,0,100);
   TH1D* RES = new TH1D("RES","",100,0,100);
 
-  TRAPChain->Draw("-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
-  TRAPChain->Draw("-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
+  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
+  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
 
   TH1D* RESEtaDeltaE = ToPDF(RES);
 
