@@ -328,11 +328,19 @@ int ProcessRootrackerToTransversityVariables(
           break;
         }
         case kGENIE:{
-          if(LiteOutput){
-            if(StdHepStatus[partNum] == 14){
-              OutObjectInfo->HandleRescat(StdHepPdg[partNum],
-                StdHepRescat[partNum]);
-            }
+          if(StdHepStatus[partNum] == 14){
+            OutObjectInfo->HandleRescat(StdHepPdg[partNum],
+              StdHepRescat[partNum]);
+          }
+          if(StdHepStatus[partNum]==11){
+            TLorentzVector StdHepPTLV = TLorentzVector(
+              StdHepP4[partNum][kStdHepIdxPx],
+              StdHepP4[partNum][kStdHepIdxPy],
+              StdHepP4[partNum][kStdHepIdxPz],
+              StdHepP4[partNum][kStdHepIdxE]);
+            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
+            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
+              StdHepPdg[partNum]);
           }
           break;
         }
