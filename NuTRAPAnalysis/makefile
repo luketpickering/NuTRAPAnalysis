@@ -63,6 +63,17 @@ TransversityVariableObjects.o: TransversityVariableObjects.cxx TransversityVaria
 TransversityUtils.o: TransversityUtils.cxx TransversityUtils.hxx
 	$(CXX) $(CXXFLAGS) -c TransversityUtils.cxx -o $@
 
+$(BDIR)/TauCalc.exe: tools/TauCalc.cxx
+	$(CXX) $(CXXFLAGS) tools/TauCalc.cxx -o TauCalc.exe -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
+	mv TauCalc.exe $(BDIR)
+
+$(BDIR)/EInvisCalc.exe: tools/EInvisCalc.cxx
+	$(CXX) $(CXXFLAGS) tools/EInvisCalc.cxx -o EInvisCalc.exe -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
+	mv EInvisCalc.exe $(BDIR)
+
+tools: $(BDIR)/TauCalc.exe $(BDIR)/EInvisCalc.exe
+
+
 clean:
 	rm -f $(TOBJDICTS)\
         $(TDICTHEADERS)\
