@@ -5,8 +5,14 @@
 #include "TH1D.h"
 
 #include "CLITools.hxx"
+#include "PureGenUtils.hxx"
+
+#include "TransversityVariableObjects.hxx"
 
 std::string InputFileDescriptor = "";
+Double_t BindingEnergy;
+Int_t NEvs = 0;
+bool IsLiteMode = false;
 
 
 template<typename TH>
@@ -48,6 +54,47 @@ void SetOpts(){
     }, true,
     [](){},
     "File to read input tree from.");
+
+    CLIArgs::AddOpt("-B", "--Binding-Energy", true,
+    [&] (std::string const &opt) -> bool {
+      BindingEnergy = std::stod(opt);
+      return true;
+    }, true,
+    [](){},
+    "Input tree is built from TransversityVarsLite instances.");
+
+    CLIArgs::AddOpt("-n", "--nevs", true,
+    [&] (std::string const &opt) -> bool {
+      NEvs = std::stoi(opt);
+      return true;
+    }, false,
+    [](){NEvs=-1;},
+    "[-1 means all in input tree. {Default:-1}]");
+
+    CLIArgs::AddOpt("-L", "--Lite-Mode", false,
+    [&] (std::string const &opt) -> bool {
+      IsLiteMode = PGUtils::str2bool(opt);
+      return true;
+    }, false,
+    [](){IsLiteMode = false;},
+    "Input tree is built from TransversityVarsLite instances.");
+}
+
+Long64_t LoopEvents(TChain *TRAPChain,
+  std::function<bool(TransversityVarsB const &mytv)> CallBack,
+  Long64_t NMax=NEvs){
+
+  TransversityVarsB const * const mytv =
+    MakeReadingTransversityVarsB(TRAPChain);
+  Long64_t SelEntries = 0;
+  Long64_t MaxLoop = (NMax==-1)?TRAPChain->GetEntries():
+                                (std::min(NMax,TRAPChain->GetEntries()) );
+  for(Long64_t ent = 0; ent < MaxLoop; ++ent){
+    TRAPChain->GetEntry(ent);
+    SelEntries += CallBack(*mytv);
+  }
+  UnsetBranchAddressesTransversityVarsB(TRAPChain,mytv);
+  return SelEntries;
 }
 
 int main(int argc, char const * argv[]){
@@ -68,65 +115,116 @@ int main(int argc, char const * argv[]){
   TChain *TRAPChain = new TChain("TransversitudenessPureSim");
   TRAPChain->Add(InputFileDescriptor.c_str());
 
-  Double_t N_QE = TRAPChain->GetEntries("(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
-  Double_t N_QE_DP = TRAPChain->GetEntries("(TransV.DeltaPTotal_HMProton_MeV.Vect().Mag()>10)&&(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
+  auto QESel = [](TransversityVarsB const &mytv) -> bool {
+      return (
+        (mytv.NeutConventionReactionCode==1) &&
+        (mytv.Muon_PDG==13) &&
+        (mytv.HMProton_PDG==2212) );
+    };
 
+  auto QESel_NegDE = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        QESel(mytv) &&
+        ( (mytv.Deltap_HMProton_MeV.E()+BindingEnergy) > 0.01) );
+    };
 
-  Double_t N_RES = TRAPChain->GetEntries("(TransV.NeutConventionReactionCode==11)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.HMCPion_PDG==211)");
-  Double_t N_RES_DP = TRAPChain->GetEntries("(TransV.DeltaPTotal_HMProtonPion_MeV.Vect().Mag()>10)&&(TransV.NeutConventionReactionCode==11)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.HMCPion_PDG==211)");
+  auto QESel_DP = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        QESel(mytv) &&
+        (mytv.Deltap_HMProton_MeV.Vect().Mag() > 10.0) );
+    };
 
+  auto QESel_NE = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        QESel(mytv) &&
+        (mytv.NFinalStateParticles!=2) );
+    };
+
+  auto QESel_NoNE = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        QESel(mytv) &&
+        (mytv.NFinalStateParticles==2) );
+    };
+
+  auto QESel_NoNE_DE = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        QESel_NoNE(mytv) &&
+        ( (mytv.Deltap_HMProton_MeV.E()+BindingEnergy) < -0.01) );
+    };
+
+  auto RESSel = [](TransversityVarsB const &mytv) -> bool {
+      return (
+        (mytv.NeutConventionReactionCode==11) &&
+        (mytv.Muon_PDG==13) &&
+        (mytv.HMProton_PDG==2212) &&
+        (mytv.HMCPion_PDG==211) );
+    };
+
+  auto RESSel_DP = [&](TransversityVarsB const &mytv) -> bool {
+      return (
+        RESSel(mytv) &&
+        (mytv.Deltap_HMProtonPion_MeV.Vect().Mag() > 10.0) );
+    };
+
+  Double_t N_QE = LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(QESel(mytv)){ return true;}
+    return false;
+  });
+  Double_t N_QE_DP = LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(QESel_DP(mytv)){ return true;}
+    return false;
+  });
+
+  Double_t N_RES = LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(RESSel(mytv)){ return true;}
+    return false;
+  });
+  Double_t N_RES_DP = LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(RESSel_DP(mytv)){ return true;}
+    return false;
+  });
 
   std::cout << "In File: " << InputFileDescriptor << std::endl;
   std::cout << "Taus:" << std::endl;
-  std::cout << "\tQE: " << (N_QE_DP/N_QE) << " = (" << N_QE_DP << "/" << N_QE << ")" << std::endl;
-  std::cout << "\tRES: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/" << N_RES << ")" << std::endl;
+  std::cout << "\tQE: " << (N_QE_DP/N_QE) << " = (" << N_QE_DP << "/"
+    << N_QE << ")" << std::endl;
+  std::cout << "\tRES: " << (N_RES_DP/N_RES) << " = (" << N_RES_DP << "/"
+    << N_RES << ")" << std::endl;
 
+  auto EImbal_QE = [&](TransversityVarsB const &mytv) -> Double_t {
+      return (-1.0*(mytv.Deltap_HMProton_MeV.E()+BindingEnergy));
+    };
 
-  TH1D* QE_NE = new TH1D("QE_NE","",100,0,100);
-  TH1D* QE = new TH1D("QE","",100,0,100);
+  std::cout << "NegDe: " <<
+    LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+      if(QESel_NegDE(mytv)){
+        std::cout << " DeltaE: " << EImbal_QE(mytv) << std::endl;
+        return true;
+      }
+      return false;
+    }) << std::endl;
 
-  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
-  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> QE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
+  Double_t Sum = 0;
+  Double_t N_NoNE = LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(QESel_NoNE(mytv)){ Sum += EImbal_QE(mytv); return true; }
+    return false;
+  });
+  Double_t Mean = Sum/N_QE;
 
-  TH1D* QEEtaDeltaE = ToPDF(QE);
+  Double_t Variance = 0;
+  LoopEvents(TRAPChain, [&](TransversityVarsB const &mytv){
+    if(QESel_NoNE(mytv)){
+      Double_t embl = EImbal_QE(mytv);
+      Variance += ((embl - Mean)*(embl - Mean));
+      return true; }
+    return false;
+  });
 
-  Double_t integral_QE = 0;
-  for(Int_t i = 1; i < QE->GetNbinsX()+1; ++i){
-    std::cout << "[" << std::setw(3) << i << "] BW: "
-      << QE->GetBinWidth(i) << ", DeltaE: " << QE->GetBinCenter(i)
-      << ", eta(DE): " << QEEtaDeltaE->GetBinContent(i)
-      << ", [1-P(DE)]: "
-      << (1.0 - (QE_NE->GetBinContent(i)/QE->GetBinContent(i)) ) << std::endl;
-    integral_QE += QE->GetBinWidth(i) * QE->GetBinCenter(i) * QEEtaDeltaE->GetBinContent(i) * (1.0 - (QE_NE->GetBinContent(i)/QE->GetBinContent(i)) );
-    std::cout << "\\int_{" << QE->GetBinLowEdge(1) << "}^{" << (QE->GetBinLowEdge(i)+QE->GetBinWidth(i)) << "} = " << integral_QE << std::endl;
-  }
-  integral_QE *= (N_QE_DP/N_QE);
+  std::cout << "<E_Inv> = " << (Sum/N_QE) << " \\pm " << sqrt(Variance/(N_QE-1.0))
+    << " = " << Sum << "/" << N_QE << std::endl;
 
-  std::cout << "<E_invis^QE> = " << integral_QE << " MeV" << std::endl;
-
-
-  TH1D* RES_NE = new TH1D("RES_NE","",100,0,100);
-  TH1D* RES = new TH1D("RES","",100,0,100);
-
-  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES_NE","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)&&(TransV.NFinalStateParticles!=2)");
-  TRAPChain->Draw("(-1.0*(TransV.DeltaPTotal_HMProton_MeV.E()+32)) >> RES","(TransV.NeutConventionReactionCode==1)&&(TransV.Muon_PDG==13)&&(TransV.HMProton_PDG==2212)");
-
-  TH1D* RESEtaDeltaE = ToPDF(RES);
-
-  Double_t integral_RES = 0;
-  for(Int_t i = 1; i < RES->GetNbinsX()+1; ++i){
-    integral_RES += RES->GetBinWidth(i) * RES->GetBinCenter(i) * RESEtaDeltaE->GetBinContent(i) * (1.0 - (RES_NE->GetBinContent(i)/RES->GetBinContent(i)) );
-  }
-  integral_RES *= (N_RES_DP/N_RES);
-
-  std::cout << "<E_invis^RES> = " << integral_RES << " MeV" << std::endl;
+  std::cout << "<E_Inv^NoNE> = " << (Sum/N_NoNE) << std::endl;
 
   delete TRAPChain;
-  delete QE_NE;
-  delete QE;
-  delete QEEtaDeltaE;
-  delete RES_NE;
-  delete RES;
-  delete RESEtaDeltaE;
   return 0;
 }
