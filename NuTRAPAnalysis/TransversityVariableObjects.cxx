@@ -544,7 +544,7 @@ void TransversityVarsB::AddBranches(TTree* tree){
 //                       Others and Transients
 //******************************************************************************
 
-  tree->Branch("CCQ2", &CCQ2, "CCQ2/I");
+  tree->Branch("CCQ2", &CCQ2, "CCQ2/D");
 
 //******************************************************************************
 //******************************************************************************
@@ -1213,6 +1213,22 @@ void TransversityVars::AddBranches(TTree* tree){
 
 struct Proxy {
 
+  Proxy(TransversityVarsB* pf) : proxyFor(pf),
+    IncNeutrino_4Mom_MeV(nullptr),
+    StruckNucleon_4Mom_MeV(nullptr),
+    Muon_4Mom_MeV(nullptr),
+    HMProton_4Mom_MeV(nullptr),
+    HMCPion_4Mom_MeV(nullptr),
+    HMTrackable_4Mom_MeV(nullptr),
+    Deltap_HMProton_MeV(nullptr),
+    deltap_HMProton_MeV(nullptr),
+    deltapT_HMProton_MeV(nullptr),
+    HMProtonPion_3Mom_MeV(nullptr),
+    deltapT_HMProtonPion_MeV(nullptr),
+    Deltap_HMProtonPion_MeV(nullptr){}
+
+  TransversityVarsB* proxyFor;
+
 //******************************************************************************
 //                     Pertinent Particle Properties
 //******************************************************************************
@@ -1259,6 +1275,21 @@ struct Proxy {
 constexpr size_t kMaxProxies = 100;
 std::vector<Proxy> _prxy;
 
+void UnsetBranchAddressesTransversityVarsB(TTree* tree,
+  TransversityVarsB const * const tvb){
+
+  tree->ResetBranchAddresses();
+
+  for(auto pr_it = _prxy.begin(); pr_it < _prxy.end();){
+    if(tvb == pr_it->proxyFor){
+      pr_it = _prxy.erase(pr_it);
+      continue;
+    }
+    ++pr_it;
+  }
+  delete tvb;
+}
+
 void SetBranchAddressesTransversityVarsB(TTree* tree, TransversityVarsB* tvb){
 //******************************************************************************
 //                     Event Properties
@@ -1270,7 +1301,7 @@ void SetBranchAddressesTransversityVarsB(TTree* tree, TransversityVarsB* tvb){
       "for each entry?");
 
   }
-  _prxy.push_back(Proxy());
+  _prxy.push_back(Proxy(tvb));
 
 //Generator reaction code
   tree->SetBranchAddress("NeutConventionReactionCode",
@@ -1377,7 +1408,7 @@ void SetBranchAddressesTransversityVarsB(TTree* tree, TransversityVarsB* tvb){
 //******************************************************************************
 //******************************************************************************
 }
-TransversityVarsB* MakeReadingTransversityVarsB(TTree* tree){
+TransversityVarsB const * const MakeReadingTransversityVarsB(TTree* tree){
   TransversityVarsB* rtn = new TransversityVarsB();
   SetBranchAddressesTransversityVarsB(tree,rtn);
   return rtn;

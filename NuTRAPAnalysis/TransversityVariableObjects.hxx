@@ -339,7 +339,9 @@ public:
 
 };
 
-TransversityVarsB* MakeReadingTransversityVarsB(TTree* tree);
+TransversityVarsB const * const MakeReadingTransversityVarsB(TTree* tree);
+void UnsetBranchAddressesTransversityVarsB(TTree* tree,
+  TransversityVarsB const * const tvb);
 TransversityVars* MakeReadingTransversityVars(TTree* tree);
 
 #endif
