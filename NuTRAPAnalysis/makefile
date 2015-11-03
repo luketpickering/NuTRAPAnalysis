@@ -10,7 +10,7 @@ TOBJH := $(TOBJS:.cxx=.hxx)
 TOBJDICTS := TransversityVariableObjects_dict.cxx
 TDICTHEADERS := TransversityVariableObjects_dict.h
 TOBJO := $(TOBJS:.cxx=.o)
-TOBJO += TransversityVariableObjects_dict.o
+# TOBJO += TransversityVariableObjects_dict.o
 
 UTILSLOC := ../utils
 LIBUTILS := $(UTILSLOC)/lib/libPureGenUtils.a
@@ -22,7 +22,7 @@ TARGETSRC := $(TARGET:.exe=.cxx)
 ROOTCFLAGS := `$(RC) --cflags`
 ROOTLDFLAGS := `$(RC) --libs --glibs`
 
-CXXFLAGS := -fPIC $(ROOTCFLAGS) -g -std=c++11
+CXXFLAGS := -fPIC $(ROOTCFLAGS) -I$(UTILSLOC) -g -std=c++11
 LDFLAGS := $(ROOTLDFLAGS) $(LIBUTILSLD) -Wl,-rpath=.
 
 .PHONY: all wtests clean
@@ -51,11 +51,11 @@ tests: TransversityUnitTests.cxx TransversityUtils.o
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) TransversityUnitTests.cxx TransversityUtils.o $(LDFLAGS)
 
 $(TARGET): $(TARGETSRC) $(TOBJO) $(LIBUTILS)
-	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ $(TOBJO) $(LDFLAGS)
 
-TransversityVariableObjects_dict.o: TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h TransversityUtils.hxx
-	$(RCINT) -f TransversityVariableObjects_dict.cxx -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
-	$(CXX) $(CXXFLAGS) -c TransversityVariableObjects_dict.cxx -o $@
+# TransversityVariableObjects_dict.o: TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h TransversityUtils.hxx
+	# $(RCINT) -f TransversityVariableObjects_dict.cxx -c -p TransversityVariableObjects.hxx TransversityVariableObjects_linkdef.h
+	# $(CXX) $(CXXFLAGS) -c TransversityVariableObjects_dict.cxx -o $@
 
 TransversityVariableObjects.o: TransversityVariableObjects.cxx TransversityVariableObjects.hxx TransversityUtils.hxx
 	$(CXX) $(CXXFLAGS) -c TransversityVariableObjects.cxx -o $@
@@ -64,11 +64,11 @@ TransversityUtils.o: TransversityUtils.cxx TransversityUtils.hxx
 	$(CXX) $(CXXFLAGS) -c TransversityUtils.cxx -o $@
 
 $(BDIR)/TauCalc.exe: tools/TauCalc.cxx
-	$(CXX) $(CXXFLAGS) tools/TauCalc.cxx -o TauCalc.exe -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) tools/TauCalc.cxx -o TauCalc.exe $(TOBJO) $(LDFLAGS)
 	mv TauCalc.exe $(BDIR)
 
 $(BDIR)/EInvisCalc.exe: tools/EInvisCalc.cxx
-	$(CXX) $(CXXFLAGS) tools/EInvisCalc.cxx -o EInvisCalc.exe -I$(UTILSLOC) $(TOBJO) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) tools/EInvisCalc.cxx -o EInvisCalc.exe $(TOBJO) $(LDFLAGS)
 	mv EInvisCalc.exe $(BDIR)
 
 tools: $(BDIR)/TauCalc.exe $(BDIR)/EInvisCalc.exe

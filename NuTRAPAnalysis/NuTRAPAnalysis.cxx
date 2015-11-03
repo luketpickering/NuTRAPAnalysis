@@ -234,14 +234,13 @@ int ProcessRootrackerToTransversityVariables(
   TransversityVarsB* OutObjectInfo;
   if(LiteOutput) {
     TransversityVarsB* OutObjectInfo_obj = new TransversityVarsB(OutputInGev);
-    outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
     OutObjectInfo = OutObjectInfo_obj;
   } else {
     TransversityVars* OutObjectInfo_obj =
       new TransversityVars(OutputInGev, NThresh, Threshs_MeV, generatorName);
-    outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
     OutObjectInfo = OutObjectInfo_obj;
   }
+  OutObjectInfo->AddBranches(outTreePureSim);
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :

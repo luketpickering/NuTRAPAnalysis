@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include "TRandom.h"
-#include "TF1.h"
+#include "TTree.h"
 
 #include "TransversityVariableObjects.hxx"
 
@@ -34,15 +33,25 @@ void ClearArray(Double_t *arr, size_t N){
 
 }
 
-ClassImp(TransversityVarsB);
-ClassImp(TransversityVars);
-
 TransversityVarsB::~TransversityVarsB(){}
 
 TransversityVarsB::TransversityVarsB(
   bool InGeV){
 
   IsInGev = InGeV;
+
+  _IncNeutrino_4Mom_MeV = &IncNeutrino_4Mom_MeV;
+  _StruckNucleon_4Mom_MeV = &StruckNucleon_4Mom_MeV;
+  _Muon_4Mom_MeV = &Muon_4Mom_MeV;
+  _HMProton_4Mom_MeV = &HMProton_4Mom_MeV;
+  _HMCPion_4Mom_MeV = &HMCPion_4Mom_MeV;
+  _HMTrackable_4Mom_MeV = &HMTrackable_4Mom_MeV;
+  _Deltap_HMProton_MeV = &Deltap_HMProton_MeV;
+  _deltap_HMProton_MeV = &deltap_HMProton_MeV;
+  _deltapT_HMProton_MeV = &deltapT_HMProton_MeV;
+  _HMProtonPion_3Mom_MeV = &HMProtonPion_3Mom_MeV;
+  _deltapT_HMProtonPion_MeV = &deltapT_HMProtonPion_MeV;
+  _Deltap_HMProtonPion_MeV = &Deltap_HMProtonPion_MeV;
 
   Reset();
 }
@@ -436,16 +445,113 @@ void TransversityVarsB::Reset(){
 
 }
 
+void TransversityVarsB::AddBranches(TTree* tree){
+
+//******************************************************************************
+//                     Event Properties
+//******************************************************************************
+
+//Generator reaction code
+  tree->Branch("NeutConventionReactionCode",&NeutConventionReactionCode,
+    "NeutConventionReactionCode/I");
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Neutrino
+  tree->Branch("IncNeutrino_PDG",&IncNeutrino_PDG, "IncNeutrino_PDG/I");
+  tree->Branch("IncNeutrino_4Mom_MeV", &_IncNeutrino_4Mom_MeV);
+
+//Struck Nucleon
+  tree->Branch("StruckNucleonPDG",&StruckNucleonPDG, "StruckNucleonPDG/I");
+  tree->Branch("StruckNucleon_4Mom_MeV", &_StruckNucleon_4Mom_MeV);
+
+//Muon
+  tree->Branch("Muon_PDG",&Muon_PDG, "Muon_PDG/I");
+  tree->Branch("Muon_4Mom_MeV", &_Muon_4Mom_MeV);
+
+//Highest Momentum Proton
+  tree->Branch("HMProton_PDG",&HMProton_PDG, "HMProton_PDG/I");
+  tree->Branch("HMProton_4Mom_MeV", &_HMProton_4Mom_MeV);
+
+//Highest Momentum Charged Pion
+  tree->Branch("HMCPion_PDG",&HMCPion_PDG, "HMCPion_PDG/I");
+  tree->Branch("HMCPion_4Mom_MeV", &_HMCPion_4Mom_MeV);
+
+//Highest Momentum Trackable
+  tree->Branch("HMTrackable_PDG",&HMTrackable_PDG, "HMTrackable_PDG/I");
+  tree->Branch("HMTrackable_4Mom_MeV", &_HMTrackable_4Mom_MeV);
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//deltaphiT
+  tree->Branch("deltaphiT_HMProton_deg", &deltaphiT_HMProton_deg,
+    "deltaphiT_HMProton_deg/D");
+
+//deltapT
+  tree->Branch("deltapT_HMProton_MeV", &_deltapT_HMProton_MeV);
+
+//Deltap
+  tree->Branch("Deltap_HMProton_MeV", &_Deltap_HMProton_MeV);
+
+//deltap
+  tree->Branch("deltap_HMProton_MeV", &_deltap_HMProton_MeV);
+
+//deltaalphaT
+  tree->Branch("deltaalphaT_HMProton_deg", &deltaalphaT_HMProton_deg,
+    "deltaalphaT_HMProton_deg/D");
+
+//deltap_TT
+  tree->Branch("deltap_TT", &deltap_TT, "deltap_TT/D");
+
+//ProtonPion Combo Platter
+  tree->Branch("HMProtonPion_3Mom_MeV", &_HMProtonPion_3Mom_MeV);
+  tree->Branch("deltaphiT_HMProtonPion_deg", &deltaphiT_HMProtonPion_deg,
+    "deltaphiT_HMProtonPion_deg/D");
+  tree->Branch("deltapT_HMProtonPion_MeV", &_deltapT_HMProtonPion_MeV);
+  tree->Branch("deltaalphaT_HMProtonPion_deg", &deltaalphaT_HMProtonPion_deg,
+    "deltaalphaT_HMProtonPion_deg/D");
+  tree->Branch("Deltap_HMProtonPion_MeV", &_Deltap_HMProtonPion_MeV);
+
+//******************************************************************************
+//                       Subsequent Species Sums
+//******************************************************************************
+
+  tree->Branch("NFinalStateParticles", &NFinalStateParticles,
+    "NFinalStateParticles/I");
+
+  tree->Branch("NProtons", &NProtons, "NProtons/I");
+  tree->Branch("NGammas", &NGammas, "NGammas/I");
+  tree->Branch("NNeutrons", &NNeutrons, "NNeutrons/I");
+  tree->Branch("NPiPlus", &NPiPlus, "NPiPlus/I");
+  tree->Branch("NPiZero", &NPiZero, "NPiZero/I");
+  tree->Branch("NPiMinus", &NPiMinus, "NPiMinus/I");
+  tree->Branch("NPions", &NPions, "NPions/I");
+  tree->Branch("NChargedPions", &NChargedPions, "NChargedPions/I");
+  tree->Branch("NOtherParticles", &NOtherParticles, "NOtherParticles/I");
+
+//******************************************************************************
+//                       Tangible Target Traits
+//******************************************************************************
+
+  tree->Branch("TargetPDG", &TargetPDG, "TargetPDG/I");
+  tree->Branch("TargetZ", &TargetZ, "TargetZ/I");
+
+//******************************************************************************
+//                       Others and Transients
+//******************************************************************************
+
+  tree->Branch("CCQ2", &CCQ2, "CCQ2/I");
+
+//******************************************************************************
+//******************************************************************************
+
+}
 
 TransversityVars::~TransversityVars(){
-  delete OtherFSPiPlus4Momenta_MeV_X;
-  delete OtherFSPiPlus4Momenta_MeV_Y;
-  delete OtherFSPiPlus4Momenta_MeV_Z;
-  delete OtherFSPiPlus4Momenta_MeV_T;
-  delete OtherFSProton4Momenta_MeV_X;
-  delete OtherFSProton4Momenta_MeV_Y;
-  delete OtherFSProton4Momenta_MeV_Z;
-  delete OtherFSProton4Momenta_MeV_T;
 }
 
 TransversityVars::TransversityVars(
@@ -456,14 +562,14 @@ TransversityVars::TransversityVars(
   this->NThresh = NThresh;
   this->Threshs_MeV = Threshs_MeV;
 
-  OtherFSPiPlus4Momenta_MeV_X = new Double_t[kMaxFSMomenta];
-  OtherFSPiPlus4Momenta_MeV_Y = new Double_t[kMaxFSMomenta];
-  OtherFSPiPlus4Momenta_MeV_Z = new Double_t[kMaxFSMomenta];
-  OtherFSPiPlus4Momenta_MeV_T = new Double_t[kMaxFSMomenta];
-  OtherFSProton4Momenta_MeV_X = new Double_t[kMaxFSMomenta];
-  OtherFSProton4Momenta_MeV_Y = new Double_t[kMaxFSMomenta];
-  OtherFSProton4Momenta_MeV_Z = new Double_t[kMaxFSMomenta];
-  OtherFSProton4Momenta_MeV_T = new Double_t[kMaxFSMomenta];
+  _GeneratorName = &GeneratorName;
+  _Muon_Pt_MeV = &Muon_Pt_MeV;
+  _FirstProton_4Mom_MeV = &FirstProton_4Mom_MeV;
+  _StruckNucleon_3Mom_Recon_MeV = &StruckNucleon_3Mom_Recon_MeV;
+  _PreFSINucleon_3Mom_Recon_MeV = &PreFSINucleon_3Mom_Recon_MeV;
+  _deltapT_FirstProton_MeV = &deltapT_FirstProton_MeV;
+  _Deltap_FirstProton_MeV = &Deltap_FirstProton_MeV;
+  _deltap_FirstProton_MeV = &deltap_FirstProton_MeV;
 
   Reset();
 }
@@ -943,6 +1049,163 @@ void TransversityVars::Reset(){
 
   //Transients
   FirstProton.Reset();
+
+//******************************************************************************
+//******************************************************************************
+}
+
+void TransversityVars::AddBranches(TTree* tree){
+
+  TransversityVarsB::AddBranches(tree);
+
+//******************************************************************************
+//                     Event Properties
+//******************************************************************************
+  tree->Branch("GeneratorName", &_GeneratorName);
+
+  tree->Branch("ReconNuEnergy", &ReconNuEnergy, "ReconNuEnergy/D");
+  tree->Branch("ReconTargetMass", &ReconTargetMass, "ReconTargetMass/D");
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Muon
+  tree->Branch("Muon_Pt_MeV", &_Muon_Pt_MeV);
+
+//First Proton
+  tree->Branch("FirstProton_PDG", &FirstProton_PDG,
+    "FirstProton_PDG/I");
+  tree->Branch("FirstProton_4Mom_MeV", &_FirstProton_4Mom_MeV);
+
+  tree->Branch("FirstProton_StdHepPosition", &FirstProton_StdHepPosition,
+    "FirstProton_StdHepPosition/I");
+
+//Highest Momentum Proton
+  tree->Branch("HMProton_StdHepPosition", &HMProton_StdHepPosition,
+    "HMProton_StdHepPosition/I");
+
+//StruckNucleon_3Mom_Recon
+  tree->Branch("StruckNucleon_3Mom_Recon_MeV", &_StruckNucleon_3Mom_Recon_MeV);
+
+//PreFSINucleon_3Mom_Recon
+  tree->Branch("PreFSINucleon_3Mom_Recon_MeV", &_PreFSINucleon_3Mom_Recon_MeV);
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//deltaphiT
+  tree->Branch("deltaphiT_FirstProton_deg", &deltaphiT_FirstProton_deg,
+    "deltaphiT_FirstProton_deg/D");
+  tree->Branch("deltaphiT_HMTrackable_deg", &deltaphiT_HMTrackable_deg,
+    "deltaphiT_HMTrackable_deg/D");
+
+//DeltaPt
+  tree->Branch("deltapT_FirstProton_MeV", &_deltapT_FirstProton_MeV);
+
+//Deltap_
+  tree->Branch("Deltap_FirstProton_MeV", &_Deltap_FirstProton_MeV);
+
+//deltap
+  tree->Branch("deltap_FirstProton_MeV", &_deltap_FirstProton_MeV);
+
+//DeltaAlphat
+  tree->Branch("deltaalphaT_FirstProton_deg", &deltaalphaT_FirstProton_deg,
+    "deltaalphaT_FirstProton_deg/D");
+
+//deltap_TT
+  tree->Branch("deltap_TT_PionPDG", &deltap_TT_PionPDG, "deltap_TT_PionPDG/D");
+
+//******************************************************************************
+//                       Final State Particles
+//******************************************************************************
+
+  tree->Branch("NThresh", &NThresh, "NThresh/I");
+  tree->Branch("Threshs_MeV", Threshs_MeV, "Threshs_MeV[NThresh]/I");
+
+  tree->Branch("NAboveThresholdProtons", NAboveThresholdProtons,
+    "NAboveThresholdProtons[NThresh]/I");
+  tree->Branch("NAboveThresholdGammas", NAboveThresholdGammas,
+    "NAboveThresholdGammas[NThresh]/I");
+  tree->Branch("NAboveThresholdPiPlus", NAboveThresholdPiPlus,
+    "NAboveThresholdPiPlus[NThresh]/I");
+  tree->Branch("NAboveThresholdPiMinus", NAboveThresholdPiMinus,
+    "NAboveThresholdPiMinus[NThresh]/I");
+  tree->Branch("NAboveThresholdChargedPions", NAboveThresholdChargedPions,
+    "NAboveThresholdChargedPions[NThresh]/I");
+  tree->Branch("NAboveThresholdTrackable", NAboveThresholdTrackable,
+    "NAboveThresholdTrackable[NThresh]/I");
+  tree->Branch("NAboveThresholdNeutrons", NAboveThresholdNeutrons,
+    "NAboveThresholdNeutrons[NThresh]/I");
+  tree->Branch("NAboveThresholdPiZero", NAboveThresholdPiZero,
+    "NAboveThresholdPiZero[NThresh]/I");
+  tree->Branch("NAboveThresholdNeutrals", NAboveThresholdNeutrals,
+    "NAboveThresholdNeutrals[NThresh]/I");
+  tree->Branch("NAboveThresholdExotic", NAboveThresholdExotic,
+    "NAboveThresholdExotic[NThresh]/I");
+
+  tree->Branch("NInEKinBinProtons", NInEKinBinProtons,
+    "NInEKinBinProtons[NThresh]/I");
+  tree->Branch("NInEKinBinGammas", NInEKinBinGammas,
+    "NInEKinBinGammas[NThresh]/I");
+  tree->Branch("NInEKinBinPiPlus", NInEKinBinPiPlus,
+    "NInEKinBinPiPlus[NThresh]/I");
+  tree->Branch("NInEKinBinPiMinus", NInEKinBinPiMinus,
+    "NInEKinBinPiMinus[NThresh]/I");
+  tree->Branch("NInEKinBinChargedPions", NInEKinBinChargedPions,
+    "NInEKinBinChargedPions[NThresh]/I");
+  tree->Branch("NInEKinBinTrackable", NInEKinBinTrackable,
+    "NInEKinBinTrackable[NThresh]/I");
+  tree->Branch("NInEKinBinNeutrons", NInEKinBinNeutrons,
+    "NInEKinBinNeutrons[NThresh]/I");
+  tree->Branch("NInEKinBinPiZero", NInEKinBinPiZero,
+    "NInEKinBinPiZero[NThresh]/I");
+  tree->Branch("NInEKinBinNeutrals", NInEKinBinNeutrals,
+    "NInEKinBinNeutrals[NThresh]/I");
+  tree->Branch("NInEKinBinExotic", NInEKinBinExotic,
+    "NInEKinBinExotic[NThresh]/I");
+
+//******************************************************************************
+//                      FS Particle Stuff
+//******************************************************************************
+
+  tree->Branch("NOtherFSPiPlus4Momenta_MeV", &NOtherFSPiPlus4Momenta_MeV,
+    "NOtherFSPiPlus4Momenta_MeV/I");
+  tree->Branch("NOtherFSProton4Momenta_MeV", &NOtherFSProton4Momenta_MeV,
+    "NOtherFSProton4Momenta_MeV/I");
+
+  tree->Branch("OtherFSPiPlus4Momenta_MeV_X", OtherFSPiPlus4Momenta_MeV_X,
+    "OtherFSPiPlus4Momenta_MeV_X[NOtherFSPiPlus4Momenta_MeV]/D");
+  tree->Branch("OtherFSPiPlus4Momenta_MeV_Y", OtherFSPiPlus4Momenta_MeV_Y,
+    "OtherFSPiPlus4Momenta_MeV_Y[NOtherFSPiPlus4Momenta_MeV]/D");
+  tree->Branch("OtherFSPiPlus4Momenta_MeV_Z", OtherFSPiPlus4Momenta_MeV_Z,
+    "OtherFSPiPlus4Momenta_MeV_Z[NOtherFSPiPlus4Momenta_MeV]/D");
+  tree->Branch("OtherFSPiPlus4Momenta_MeV_T", OtherFSPiPlus4Momenta_MeV_T,
+    "OtherFSPiPlus4Momenta_MeV_T[NOtherFSPiPlus4Momenta_MeV]/D");
+
+  tree->Branch("OtherFSProton4Momenta_MeV_X", OtherFSProton4Momenta_MeV_X,
+    "OtherFSProton4Momenta_MeV_X[NOtherFSProton4Momenta_MeV]/D");
+  tree->Branch("OtherFSProton4Momenta_MeV_Y", OtherFSProton4Momenta_MeV_Y,
+    "OtherFSProton4Momenta_MeV_Y[NOtherFSProton4Momenta_MeV]/D");
+  tree->Branch("OtherFSProton4Momenta_MeV_Z", OtherFSProton4Momenta_MeV_Z,
+    "OtherFSProton4Momenta_MeV_Z[NOtherFSProton4Momenta_MeV]/D");
+  tree->Branch("OtherFSProton4Momenta_MeV_T", OtherFSProton4Momenta_MeV_T,
+    "OtherFSProton4Momenta_MeV_T[NOtherFSProton4Momenta_MeV]/D");
+
+//******************************************************************************
+//                       Others and Transients
+//******************************************************************************
+  tree->Branch("ProtonRescat_contains_NoInt", &ProtonRescat_contains_NoInt,
+    "ProtonRescat_contains_NoInt/O");
+  tree->Branch("ProtonRescat_contains_chrgEx", &ProtonRescat_contains_chrgEx,
+    "ProtonRescat_contains_chrgEx/O");
+  tree->Branch("ProtonRescat_contains_elastic", &ProtonRescat_contains_elastic,
+    "ProtonRescat_contains_elastic/O");
+  tree->Branch("ProtonRescat_contains_inelastic",
+    &ProtonRescat_contains_inelastic, "ProtonRescat_contains_inelastic/O");
+  tree->Branch("ProtonRescat_contains_knockout",
+    &ProtonRescat_contains_knockout, "ProtonRescat_contains_knockout/O");
 
 //******************************************************************************
 //******************************************************************************

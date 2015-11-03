@@ -37,7 +37,7 @@ struct PartStruct {
   }
 };
 
-struct TransversityVarsB : public TObject {
+struct TransversityVarsB {
 protected:
   bool IsInGev; //!
 public:
@@ -59,26 +59,32 @@ public:
 //Neutrino
   Int_t IncNeutrino_PDG;
   TLorentzVector IncNeutrino_4Mom_MeV;
+  TLorentzVector* _IncNeutrino_4Mom_MeV;
 
 //Struck Nucleon
   Int_t StruckNucleonPDG;
   TLorentzVector StruckNucleon_4Mom_MeV;
+  TLorentzVector* _StruckNucleon_4Mom_MeV;
 
 //Muon
   Int_t Muon_PDG;
   TLorentzVector Muon_4Mom_MeV;
+  TLorentzVector* _Muon_4Mom_MeV;
 
 //Highest Momentum Proton
   Int_t HMProton_PDG;
   TLorentzVector HMProton_4Mom_MeV;
+  TLorentzVector* _HMProton_4Mom_MeV;
 
 //Highest Momentum Charged Pion
   Int_t HMCPion_PDG;
   TLorentzVector HMCPion_4Mom_MeV;
+  TLorentzVector* _HMCPion_4Mom_MeV;
 
 //Highest Momentum Trackable
   Int_t HMTrackable_PDG;
   TLorentzVector HMTrackable_4Mom_MeV;
+  TLorentzVector* _HMTrackable_4Mom_MeV;
 
 //******************************************************************************
 //                       'Verse Variable Values
@@ -89,12 +95,15 @@ public:
 
 //Deltap
   TLorentzVector Deltap_HMProton_MeV;
+  TLorentzVector* _Deltap_HMProton_MeV;
 
 //deltap
   TLorentzVector deltap_HMProton_MeV;
+  TLorentzVector* _deltap_HMProton_MeV;
 
 //deltapT
   TVector3 deltapT_HMProton_MeV;
+  TVector3* _deltapT_HMProton_MeV;
 
 //deltaalphaT
   Double_t deltaalphaT_HMProton_deg;
@@ -104,10 +113,13 @@ public:
 
 //ProtonPion Combo Platter
   TVector3 HMProtonPion_3Mom_MeV;
+  TVector3* _HMProtonPion_3Mom_MeV;
   Double_t deltaphiT_HMProtonPion_deg;
   TVector3 deltapT_HMProtonPion_MeV;
+  TVector3* _deltapT_HMProtonPion_MeV;
   Double_t deltaalphaT_HMProtonPion_deg;
   TLorentzVector Deltap_HMProtonPion_MeV;
+  TLorentzVector* _Deltap_HMProtonPion_MeV;
 
 //******************************************************************************
 //                       Subsequent Species Sums
@@ -157,7 +169,7 @@ protected:
   virtual void HandleHMTrackable(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod, Int_t PDG);
 public:
-
+  virtual void AddBranches(TTree* tree);
   virtual bool HandleStdHepParticle(UInt_t &StdHepPosition,
                             Int_t &StdHepPdg,
                             Int_t &StdHepStatus,
@@ -166,8 +178,6 @@ public:
     Double_t &StdHepP3Mod, Int_t pdg);
   virtual void Finalise();
   virtual void Reset();
-
-  ClassDef(TransversityVarsB,1);
 
 };
 
@@ -186,6 +196,7 @@ public:
   Int_t* Threshs_MeV; //! //[NThresh]
 
   TString GeneratorName; //!
+  TString* _GeneratorName;
 
 //******************************************************************************
 //                     Event Properties
@@ -200,10 +211,12 @@ public:
 
 //Muon
   TVector3 Muon_Pt_MeV;
+  TVector3* _Muon_Pt_MeV;
 
 //First Proton
   Int_t FirstProton_PDG;
   TLorentzVector FirstProton_4Mom_MeV;
+  TLorentzVector* _FirstProton_4Mom_MeV;
   Int_t FirstProton_StdHepPosition;
 
 //Highest Momentum Proton
@@ -211,9 +224,11 @@ public:
 
 //StruckNucleon_3Mom_Recon
   TVector3 StruckNucleon_3Mom_Recon_MeV;
+  TVector3* _StruckNucleon_3Mom_Recon_MeV;
 
 //PreFSINucleon_3Mom_Recon
   TVector3 PreFSINucleon_3Mom_Recon_MeV;
+  TVector3* _PreFSINucleon_3Mom_Recon_MeV;
 
 //******************************************************************************
 //                       'Verse Variable Values
@@ -225,12 +240,15 @@ public:
 
 //deltapT
   TVector3 deltapT_FirstProton_MeV;
+  TVector3* _deltapT_FirstProton_MeV;
 
 //Deltap
   TLorentzVector Deltap_FirstProton_MeV;
+  TLorentzVector* _Deltap_FirstProton_MeV;
 
 //deltap
   TLorentzVector deltap_FirstProton_MeV;
+  TLorentzVector* _deltap_FirstProton_MeV;
 
 //deltaalphaT
   Double_t deltaalphaT_FirstProton_deg;
@@ -273,14 +291,14 @@ public:
   Int_t NOtherFSPiPlus4Momenta_MeV;
   Int_t NOtherFSProton4Momenta_MeV;
 
-  Double_t* OtherFSPiPlus4Momenta_MeV_X; //[NOtherFSPiPlus4Momenta_MeV]
-  Double_t* OtherFSPiPlus4Momenta_MeV_Y; //[NOtherFSPiPlus4Momenta_MeV]
-  Double_t* OtherFSPiPlus4Momenta_MeV_Z; //[NOtherFSPiPlus4Momenta_MeV]
-  Double_t* OtherFSPiPlus4Momenta_MeV_T; //[NOtherFSPiPlus4Momenta_MeV]
-  Double_t* OtherFSProton4Momenta_MeV_X; //[NOtherFSProton4Momenta_MeV]
-  Double_t* OtherFSProton4Momenta_MeV_Y; //[NOtherFSProton4Momenta_MeV]
-  Double_t* OtherFSProton4Momenta_MeV_Z; //[NOtherFSProton4Momenta_MeV]
-  Double_t* OtherFSProton4Momenta_MeV_T; //[NOtherFSProton4Momenta_MeV]
+  Double_t OtherFSPiPlus4Momenta_MeV_X[kMaxFSMomenta]; //[NOtherFSPiPlus4Momenta_MeV]
+  Double_t OtherFSPiPlus4Momenta_MeV_Y[kMaxFSMomenta]; //[NOtherFSPiPlus4Momenta_MeV]
+  Double_t OtherFSPiPlus4Momenta_MeV_Z[kMaxFSMomenta]; //[NOtherFSPiPlus4Momenta_MeV]
+  Double_t OtherFSPiPlus4Momenta_MeV_T[kMaxFSMomenta]; //[NOtherFSPiPlus4Momenta_MeV]
+  Double_t OtherFSProton4Momenta_MeV_X[kMaxFSMomenta]; //[NOtherFSProton4Momenta_MeV]
+  Double_t OtherFSProton4Momenta_MeV_Y[kMaxFSMomenta]; //[NOtherFSProton4Momenta_MeV]
+  Double_t OtherFSProton4Momenta_MeV_Z[kMaxFSMomenta]; //[NOtherFSProton4Momenta_MeV]
+  Double_t OtherFSProton4Momenta_MeV_T[kMaxFSMomenta]; //[NOtherFSProton4Momenta_MeV]
 
 //******************************************************************************
 //                       Others and Transients
@@ -304,7 +322,7 @@ private:
     Double_t &StdHepP3Mod, Int_t pdg);
   Int_t PartIsAboveThresh(TLorentzVector FourMom);
 public:
-
+  void AddBranches(TTree* tree);
   bool HandleStdHepParticle(UInt_t &StdHepPosition,
                             Int_t &StdHepPdg,
                             Int_t &StdHepStatus,
@@ -313,8 +331,6 @@ public:
 
   void Finalise();
   void Reset();
-
-  ClassDef(TransversityVars,1);
 };
 
 #endif
