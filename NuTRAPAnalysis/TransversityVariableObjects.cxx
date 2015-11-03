@@ -1210,3 +1210,181 @@ void TransversityVars::AddBranches(TTree* tree){
 //******************************************************************************
 //******************************************************************************
 }
+
+struct Proxy {
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Neutrino
+  TLorentzVector *IncNeutrino_4Mom_MeV;
+
+//Struck Nucleon
+  TLorentzVector *StruckNucleon_4Mom_MeV;
+
+//Muon
+  TLorentzVector *Muon_4Mom_MeV;
+
+//Highest Momentum Proton
+  TLorentzVector *HMProton_4Mom_MeV;
+
+//Highest Momentum Charged Pion
+  TLorentzVector *HMCPion_4Mom_MeV;
+
+//Highest Momentum Trackable
+  TLorentzVector *HMTrackable_4Mom_MeV;
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//Deltap
+  TLorentzVector *Deltap_HMProton_MeV;
+
+//deltap
+  TLorentzVector *deltap_HMProton_MeV;
+
+//deltapT
+  TVector3 *deltapT_HMProton_MeV;
+
+//ProtonPion Combo Platter
+  TVector3 *HMProtonPion_3Mom_MeV;
+  TVector3 *deltapT_HMProtonPion_MeV;
+  TLorentzVector *Deltap_HMProtonPion_MeV;
+
+//******************************************************************************
+//******************************************************************************
+};
+constexpr size_t kMaxProxies = 100;
+std::vector<Proxy> _prxy;
+
+void SetBranchAddressesTransversityVarsB(TTree* tree, TransversityVarsB* tvb){
+//******************************************************************************
+//                     Event Properties
+//******************************************************************************
+
+  if(kMaxProxies == _prxy.size()){
+    throw std::overflow_error("Attempted to set up more than 100 TTrees with "
+      "separate instances of TransversityVars. Are you attempting to do this"
+      "for each entry?");
+
+  }
+  _prxy.push_back(Proxy());
+
+//Generator reaction code
+  tree->SetBranchAddress("NeutConventionReactionCode",
+    &tvb->NeutConventionReactionCode);
+
+//******************************************************************************
+//                     Pertinent Particle Properties
+//******************************************************************************
+
+//Neutrino
+  tree->SetBranchAddress("IncNeutrino_PDG",&tvb->IncNeutrino_PDG);
+  _prxy.back().IncNeutrino_4Mom_MeV = &tvb->IncNeutrino_4Mom_MeV;
+  tree->SetBranchAddress("IncNeutrino_4Mom_MeV", &_prxy.back().IncNeutrino_4Mom_MeV);
+
+//Struck Nucleon
+  tree->SetBranchAddress("StruckNucleonPDG",&tvb->StruckNucleonPDG);
+  _prxy.back().StruckNucleon_4Mom_MeV = &tvb->StruckNucleon_4Mom_MeV;
+  tree->SetBranchAddress("StruckNucleon_4Mom_MeV", &_prxy.back().StruckNucleon_4Mom_MeV);
+
+//Muon
+  tree->SetBranchAddress("Muon_PDG",&tvb->Muon_PDG);
+  _prxy.back().Muon_4Mom_MeV = &tvb->Muon_4Mom_MeV;
+  tree->SetBranchAddress("Muon_4Mom_MeV", &_prxy.back().Muon_4Mom_MeV);
+
+//Highest Momentum Proton
+  tree->SetBranchAddress("HMProton_PDG",&tvb->HMProton_PDG);
+  _prxy.back().HMProton_4Mom_MeV = &tvb->HMProton_4Mom_MeV;
+  tree->SetBranchAddress("HMProton_4Mom_MeV", &_prxy.back().HMProton_4Mom_MeV);
+
+//Highest Momentum Charged Pion
+  tree->SetBranchAddress("HMCPion_PDG",&tvb->HMCPion_PDG);
+  _prxy.back().HMCPion_4Mom_MeV = &tvb->HMCPion_4Mom_MeV;
+  tree->SetBranchAddress("HMCPion_4Mom_MeV", &_prxy.back().HMCPion_4Mom_MeV);
+
+//Highest Momentum Trackable
+  tree->SetBranchAddress("HMTrackable_PDG",&tvb->HMTrackable_PDG);
+  _prxy.back().HMTrackable_4Mom_MeV = &tvb->HMTrackable_4Mom_MeV;
+  tree->SetBranchAddress("HMTrackable_4Mom_MeV", &_prxy.back().HMTrackable_4Mom_MeV);
+
+//******************************************************************************
+//                       'Verse Variable Values
+//******************************************************************************
+
+//deltaphiT
+  tree->SetBranchAddress("deltaphiT_HMProton_deg", &tvb->deltaphiT_HMProton_deg);
+
+//deltapT
+  _prxy.back().deltapT_HMProton_MeV = &tvb->deltapT_HMProton_MeV;
+  tree->SetBranchAddress("deltapT_HMProton_MeV", &_prxy.back().deltapT_HMProton_MeV);
+
+//Deltap
+  _prxy.back().Deltap_HMProton_MeV = &tvb->Deltap_HMProton_MeV;
+  tree->SetBranchAddress("Deltap_HMProton_MeV", &_prxy.back().Deltap_HMProton_MeV);
+
+//deltap
+  _prxy.back().deltap_HMProton_MeV = &tvb->deltap_HMProton_MeV;
+  tree->SetBranchAddress("deltap_HMProton_MeV", &_prxy.back().deltap_HMProton_MeV);
+
+//deltaalphaT
+  tree->SetBranchAddress("deltaalphaT_HMProton_deg", &tvb->deltaalphaT_HMProton_deg);
+
+//deltap_TT
+  tree->SetBranchAddress("deltap_TT", &tvb->deltap_TT);
+
+//ProtonPion Combo Platter
+  _prxy.back().HMProtonPion_3Mom_MeV = &tvb->HMProtonPion_3Mom_MeV;
+  tree->SetBranchAddress("HMProtonPion_3Mom_MeV", &_prxy.back().HMProtonPion_3Mom_MeV);
+  tree->SetBranchAddress("deltaphiT_HMProtonPion_deg", &tvb->deltaphiT_HMProtonPion_deg);
+  _prxy.back().deltapT_HMProtonPion_MeV = &tvb->deltapT_HMProtonPion_MeV;
+  tree->SetBranchAddress("deltapT_HMProtonPion_MeV", &_prxy.back().deltapT_HMProtonPion_MeV);
+  tree->SetBranchAddress("deltaalphaT_HMProtonPion_deg", &tvb->deltaalphaT_HMProtonPion_deg);
+  _prxy.back().Deltap_HMProtonPion_MeV = &tvb->Deltap_HMProtonPion_MeV;
+  tree->SetBranchAddress("Deltap_HMProtonPion_MeV", &_prxy.back().Deltap_HMProtonPion_MeV);
+
+//******************************************************************************
+//                       Subsequent Species Sums
+//******************************************************************************
+
+  tree->SetBranchAddress("NFinalStateParticles", &tvb->NFinalStateParticles);
+
+  tree->SetBranchAddress("NProtons", &tvb->NProtons);
+  tree->SetBranchAddress("NGammas", &tvb->NGammas);
+  tree->SetBranchAddress("NNeutrons", &tvb->NNeutrons);
+  tree->SetBranchAddress("NPiPlus", &tvb->NPiPlus);
+  tree->SetBranchAddress("NPiZero", &tvb->NPiZero);
+  tree->SetBranchAddress("NPiMinus", &tvb->NPiMinus);
+  tree->SetBranchAddress("NPions", &tvb->NPions);
+  tree->SetBranchAddress("NChargedPions", &tvb->NChargedPions);
+  tree->SetBranchAddress("NOtherParticles", &tvb->NOtherParticles);
+
+//******************************************************************************
+//                       Tangible Target Traits
+//******************************************************************************
+
+  tree->SetBranchAddress("TargetPDG", &tvb->TargetPDG);
+  tree->SetBranchAddress("TargetZ", &tvb->TargetZ);
+
+//******************************************************************************
+//                       Others and Transients
+//******************************************************************************
+
+  tree->SetBranchAddress("CCQ2", &tvb->CCQ2);
+
+//******************************************************************************
+//******************************************************************************
+}
+TransversityVarsB* MakeReadingTransversityVarsB(TTree* tree){
+  TransversityVarsB* rtn = new TransversityVarsB();
+  SetBranchAddressesTransversityVarsB(tree,rtn);
+  return rtn;
+}
+TransversityVars* MakeReadingTransversityVars(TTree* tree){
+  TransversityVars* rtn = new TransversityVars();
+  SetBranchAddressesTransversityVarsB(tree,rtn);
+  //Add other branches here.
+  return rtn;
+}

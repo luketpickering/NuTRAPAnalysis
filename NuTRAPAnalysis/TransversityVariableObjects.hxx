@@ -1,7 +1,7 @@
 #ifndef __TRANSVERSITY_VARIABLE_OBJECTS_SEEN__
 #define __TRANSVERSITY_VARIABLE_OBJECTS_SEEN__
 
-#include <exception>
+#include <stdexcept>
 
 #include "TObject.h"
 #include "TLorentzVector.h"
@@ -40,6 +40,29 @@ struct PartStruct {
 struct TransversityVarsB {
 protected:
   bool IsInGev; //!
+
+  //Transients
+  PartStruct Muon; //!
+  PartStruct MuonNeutrino; //!
+  PartStruct StruckNucleon; //!
+  PartStruct HMProton; //!
+  PartStruct HMCPion; //!
+  PartStruct HMTrackable; //!
+
+  TLorentzVector* _IncNeutrino_4Mom_MeV;
+  TLorentzVector* _StruckNucleon_4Mom_MeV;
+  TLorentzVector* _Muon_4Mom_MeV;
+  TLorentzVector* _HMProton_4Mom_MeV;
+  TLorentzVector* _HMCPion_4Mom_MeV;
+  TLorentzVector* _HMTrackable_4Mom_MeV;
+  TLorentzVector* _Deltap_HMProton_MeV;
+  TLorentzVector* _deltap_HMProton_MeV;
+  TVector3* _deltapT_HMProton_MeV;
+  TVector3* _HMProtonPion_3Mom_MeV;
+  TVector3* _deltapT_HMProtonPion_MeV;
+  TLorentzVector* _Deltap_HMProtonPion_MeV;
+
+
 public:
 
   TransversityVarsB(bool InGeV=true);
@@ -59,32 +82,26 @@ public:
 //Neutrino
   Int_t IncNeutrino_PDG;
   TLorentzVector IncNeutrino_4Mom_MeV;
-  TLorentzVector* _IncNeutrino_4Mom_MeV;
 
 //Struck Nucleon
   Int_t StruckNucleonPDG;
   TLorentzVector StruckNucleon_4Mom_MeV;
-  TLorentzVector* _StruckNucleon_4Mom_MeV;
 
 //Muon
   Int_t Muon_PDG;
   TLorentzVector Muon_4Mom_MeV;
-  TLorentzVector* _Muon_4Mom_MeV;
 
 //Highest Momentum Proton
   Int_t HMProton_PDG;
   TLorentzVector HMProton_4Mom_MeV;
-  TLorentzVector* _HMProton_4Mom_MeV;
 
 //Highest Momentum Charged Pion
   Int_t HMCPion_PDG;
   TLorentzVector HMCPion_4Mom_MeV;
-  TLorentzVector* _HMCPion_4Mom_MeV;
 
 //Highest Momentum Trackable
   Int_t HMTrackable_PDG;
   TLorentzVector HMTrackable_4Mom_MeV;
-  TLorentzVector* _HMTrackable_4Mom_MeV;
 
 //******************************************************************************
 //                       'Verse Variable Values
@@ -95,15 +112,12 @@ public:
 
 //Deltap
   TLorentzVector Deltap_HMProton_MeV;
-  TLorentzVector* _Deltap_HMProton_MeV;
 
 //deltap
   TLorentzVector deltap_HMProton_MeV;
-  TLorentzVector* _deltap_HMProton_MeV;
 
 //deltapT
   TVector3 deltapT_HMProton_MeV;
-  TVector3* _deltapT_HMProton_MeV;
 
 //deltaalphaT
   Double_t deltaalphaT_HMProton_deg;
@@ -113,13 +127,10 @@ public:
 
 //ProtonPion Combo Platter
   TVector3 HMProtonPion_3Mom_MeV;
-  TVector3* _HMProtonPion_3Mom_MeV;
   Double_t deltaphiT_HMProtonPion_deg;
   TVector3 deltapT_HMProtonPion_MeV;
-  TVector3* _deltapT_HMProtonPion_MeV;
   Double_t deltaalphaT_HMProtonPion_deg;
   TLorentzVector Deltap_HMProtonPion_MeV;
-  TLorentzVector* _Deltap_HMProtonPion_MeV;
 
 //******************************************************************************
 //                       Subsequent Species Sums
@@ -150,14 +161,6 @@ public:
 
   Double_t CCQ2;
 
-  //Transients
-  PartStruct Muon; //!
-  PartStruct MuonNeutrino; //!
-  PartStruct StruckNucleon; //!
-  PartStruct HMProton; //!
-  PartStruct HMCPion; //!
-  PartStruct HMTrackable; //!
-
 //******************************************************************************
 //******************************************************************************
 
@@ -183,6 +186,19 @@ public:
 
 struct TransversityVars : public TransversityVarsB {
 
+protected:
+  PartStruct FirstProton; //!
+  TString* _GeneratorName;
+  TVector3* _Muon_Pt_MeV;
+  TLorentzVector* _FirstProton_4Mom_MeV;
+  TVector3* _StruckNucleon_3Mom_Recon_MeV;
+  TVector3* _PreFSINucleon_3Mom_Recon_MeV;
+  TVector3* _deltapT_FirstProton_MeV;
+  TLorentzVector* _Deltap_FirstProton_MeV;
+  TLorentzVector* _deltap_FirstProton_MeV;
+  TLorentzVector __OtherFSPiPlus4Momenta_MeV[kMaxFSMomenta + 1]; //!
+  TLorentzVector __OtherFSProton4Momenta_MeV[kMaxFSMomenta + 1]; //!
+
 public:
 
   TransversityVars(bool InGeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0,
@@ -196,7 +212,6 @@ public:
   Int_t* Threshs_MeV; //! //[NThresh]
 
   TString GeneratorName; //!
-  TString* _GeneratorName;
 
 //******************************************************************************
 //                     Event Properties
@@ -211,12 +226,10 @@ public:
 
 //Muon
   TVector3 Muon_Pt_MeV;
-  TVector3* _Muon_Pt_MeV;
 
 //First Proton
   Int_t FirstProton_PDG;
   TLorentzVector FirstProton_4Mom_MeV;
-  TLorentzVector* _FirstProton_4Mom_MeV;
   Int_t FirstProton_StdHepPosition;
 
 //Highest Momentum Proton
@@ -224,11 +237,9 @@ public:
 
 //StruckNucleon_3Mom_Recon
   TVector3 StruckNucleon_3Mom_Recon_MeV;
-  TVector3* _StruckNucleon_3Mom_Recon_MeV;
 
 //PreFSINucleon_3Mom_Recon
   TVector3 PreFSINucleon_3Mom_Recon_MeV;
-  TVector3* _PreFSINucleon_3Mom_Recon_MeV;
 
 //******************************************************************************
 //                       'Verse Variable Values
@@ -240,15 +251,12 @@ public:
 
 //deltapT
   TVector3 deltapT_FirstProton_MeV;
-  TVector3* _deltapT_FirstProton_MeV;
 
 //Deltap
   TLorentzVector Deltap_FirstProton_MeV;
-  TLorentzVector* _Deltap_FirstProton_MeV;
 
 //deltap
   TLorentzVector deltap_FirstProton_MeV;
-  TLorentzVector* _deltap_FirstProton_MeV;
 
 //deltaalphaT
   Double_t deltaalphaT_FirstProton_deg;
@@ -285,8 +293,7 @@ public:
 //******************************************************************************
 //                      FS Particle Stuff
 //******************************************************************************
-  TLorentzVector __OtherFSPiPlus4Momenta_MeV[kMaxFSMomenta + 1]; //!
-  TLorentzVector __OtherFSProton4Momenta_MeV[kMaxFSMomenta + 1]; //!
+
 
   Int_t NOtherFSPiPlus4Momenta_MeV;
   Int_t NOtherFSProton4Momenta_MeV;
@@ -310,8 +317,6 @@ public:
   Bool_t ProtonRescat_contains_inelastic;
   Bool_t ProtonRescat_contains_knockout;
 
-  PartStruct FirstProton; //!
-
 //******************************************************************************
 //******************************************************************************
 
@@ -331,6 +336,10 @@ public:
 
   void Finalise();
   void Reset();
+
 };
+
+TransversityVarsB* MakeReadingTransversityVarsB(TTree* tree);
+TransversityVars* MakeReadingTransversityVars(TTree* tree);
 
 #endif
