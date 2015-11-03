@@ -54,7 +54,7 @@ Double_t GiStdHepP4[kGiStdHepNPmax][4];
 namespace {
 
   int Verbosity = 1;
-  bool OutputInGev;
+  bool MultiplyByGeVToMeV;
   bool LiteOutput = false;
 
   Int_t NThresh = 0;
@@ -233,11 +233,13 @@ int ProcessRootrackerToTransversityVariables(
 
   TransversityVarsB* OutObjectInfo;
   if(LiteOutput) {
-    TransversityVarsB* OutObjectInfo_obj = new TransversityVarsB(OutputInGev);
+    TransversityVarsB* OutObjectInfo_obj =
+      new TransversityVarsB(MultiplyByGeVToMeV);
     OutObjectInfo = OutObjectInfo_obj;
   } else {
     TransversityVars* OutObjectInfo_obj =
-      new TransversityVars(OutputInGev, NThresh, Threshs_MeV, generatorName);
+      new TransversityVars(MultiplyByGeVToMeV, NThresh, Threshs_MeV,
+        generatorName);
     OutObjectInfo = OutObjectInfo_obj;
   }
   OutObjectInfo->AddBranches(outTreePureSim);
@@ -478,12 +480,13 @@ void SetOpts(){
 
   CLIArgs::AddOpt("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
-      std::cout << "\t--Multiplying output momenta and energies by 1E3." << std::endl;
-      OutputInGev = false;
+      std::cout << "\t--Multiplying output momenta and energies by 1E3."
+        << std::endl;
+      MultiplyByGeVToMeV = true;
       return true;
     }, false,
-    [&](){OutputInGev = true;}, "Multiply output momenta and energies by "
-      "1E3.{default=true}");
+    [&](){MultiplyByGeVToMeV = false;}, "[Multiply output momenta and energies "
+      "by 1E3.{default=false}]");
 
   CLIArgs::AddOpt("-g", "--generator", true,
     [&] (std::string const &opt) -> bool {
@@ -502,7 +505,8 @@ void SetOpts(){
       }
       int vbhold;
       if(PGUtils::str2int(vbhold,opt.c_str()) == PGUtils::STRINT_SUCCESS){
-        std::cout << "\t--Added EKin threshold: " << vbhold << " MeV" << std::endl;
+        std::cout << "\t--Added EKin threshold: " << vbhold << " MeV"
+          << std::endl;
         if(NThresh>0 && (vbhold < Threshs_MeV[NThresh-1])){
           std::cout << "[ERROR]: Attempting to add EKin threshold at " << vbhold
             << " MeV, but the previous one at " << Threshs_MeV[NThresh-1]
@@ -516,7 +520,7 @@ void SetOpts(){
       }
       return false;
     }, false,
-    [&](){}, "<int> Add EKin threshold [MeV] {default=N/A}");
+    [&](){}, "<int> [Add EKin threshold [MeV] {default=N/A}]");
 
     CLIArgs::AddOpt("-N", "--NEUT-Modes", true,
     [&] (std::string const &opt) -> bool {
@@ -535,7 +539,7 @@ void SetOpts(){
       return false;
     }, false,
     [](){},
-    "<int,int,...> NEUT modes to save output from.");
+    "<int,int,...> [NEUT modes to save output from.]");
 
     CLIArgs::AddOpt("-L", "--Lite-Output", false,
     [&] (std::string const &opt) -> bool {
@@ -544,7 +548,7 @@ void SetOpts(){
       return true;
     }, false,
     [](){LiteOutput = false;},
-    "Will output in Lite mode which contains less output variables.");
+    "[Will output in Lite mode which contains less output variables.]");
 
 }
 }
