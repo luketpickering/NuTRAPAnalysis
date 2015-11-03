@@ -76,11 +76,9 @@ namespace {
   Int_t* StdHepStatus = 0;
   Int_t* StdHepRescat = 0;
 
-  Float_t TargetBE_MeV = 0xdeadbeef;
-
   int NeutConventionReactionCode;
 
-  std::vector<int> ModeIgnores;
+  std::vector<int> ModesToSave;
 
 } // namespace
 
@@ -235,14 +233,12 @@ int ProcessRootrackerToTransversityVariables(
 
   TransversityVarsB* OutObjectInfo;
   if(LiteOutput) {
-    TransversityVarsLite* OutObjectInfo_obj = new TransversityVarsLite(OutputInGev);
+    TransversityVarsB* OutObjectInfo_obj = new TransversityVarsB(OutputInGev);
     outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
     OutObjectInfo = OutObjectInfo_obj;
-
   } else {
     TransversityVars* OutObjectInfo_obj =
-      new TransversityVars(OutputInGev, TargetBE_MeV,
-        NThresh, Threshs_MeV, generatorName);
+      new TransversityVars(OutputInGev, NThresh, Threshs_MeV, generatorName);
     outTreePureSim->Branch("TransV", &OutObjectInfo_obj);
     OutObjectInfo = OutObjectInfo_obj;
   }
@@ -294,6 +290,7 @@ int ProcessRootrackerToTransversityVariables(
     }
 
     for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
+
       OutObjectInfo->HandleStdHepParticle(partNum, StdHepPdg[partNum],
         StdHepStatus[partNum], StdHepP4[partNum]);
 
@@ -328,9 +325,10 @@ int ProcessRootrackerToTransversityVariables(
           break;
         }
         case kGENIE:{
-          if(StdHepStatus[partNum] == 14){
-            OutObjectInfo->HandleRescat(StdHepPdg[partNum],
-              StdHepRescat[partNum]);
+          if(StdHepStatus[partNum] == 14 && !LiteOutput){
+            static_cast<TransversityVars*>(OutObjectInfo)\
+              ->HandleRescat(StdHepPdg[partNum],
+                StdHepRescat[partNum]);
           }
           if(StdHepStatus[partNum]==11){
             TLorentzVector StdHepPTLV = TLorentzVector(
@@ -371,41 +369,39 @@ int ProcessRootrackerToTransversityVariables(
           break;
         }
       }
-
     }
 
     OutObjectInfo->Finalise();
 
     //Bumps up the code for non-Delta++ resonances for incoming neutrinos.
-    if((OutObjectInfo->GetIncNeutrino_PDG() > 0) &&
+    if((OutObjectInfo->IncNeutrino_PDG > 0) &&
       (Generator == kNuWro) &&
       (NeutConventionReactionCode == 11) &&
-      (OutObjectInfo->GetStruckNucleonPDG() != 2212) ){
-      OutObjectInfo->SetNeutConventionReactionCode(12);
+      (OutObjectInfo->StruckNucleonPDG != 2212) ){
+      OutObjectInfo->NeutConventionReactionCode = 12;
     //Fixes broken neutrino codes.
-    } else if( (OutObjectInfo->GetIncNeutrino_PDG() < 0) &&
+    } else if( (OutObjectInfo->IncNeutrino_PDG < 0) &&
                (NeutConventionReactionCode > 0) ) {
       //want antinu codes to be < 0
-       OutObjectInfo->SetNeutConventionReactionCode(
-        -1*NeutConventionReactionCode);
+       OutObjectInfo->NeutConventionReactionCode =
+        (-1*NeutConventionReactionCode);
 
       //Fixes the code for antinu Delta0 resonances.
       if( (Generator == kNuWro) &&
           (NeutConventionReactionCode == 11) &&
-          (OutObjectInfo->GetStruckNucleonPDG() == 2212) ){
+          (OutObjectInfo->StruckNucleonPDG == 2212) ){
 
-        OutObjectInfo->SetNeutConventionReactionCode(
-          -13);
+        OutObjectInfo->NeutConventionReactionCode = -13;
       }
     } else {
-      OutObjectInfo->SetNeutConventionReactionCode(NeutConventionReactionCode);
+      OutObjectInfo->NeutConventionReactionCode = NeutConventionReactionCode;
     }
 
     //Skips modes that we don't want to deal with.
-    if(ModeIgnores.size()){
+    if(ModesToSave.size()){
       bool found = false;
-      for(auto const & mi : ModeIgnores){
-        if(mi == OutObjectInfo->GetNeutConventionReactionCode()){
+      for(auto const & mi : ModesToSave){
+        if(mi == OutObjectInfo->NeutConventionReactionCode){
           found = true;
           break;
         }
@@ -480,13 +476,15 @@ void SetOpts(){
       return false;
     }, false,
     [&](){Verbosity = 0;}, "<0-4>{default=0}");
+
   CLIArgs::AddOpt("-M", "--MeV-mode", false,
     [&] (std::string const &opt) -> bool {
-      std::cout << "\t--Reading in MeV." << std::endl;
+      std::cout << "\t--Multiplying output momenta and energies by 1E3." << std::endl;
       OutputInGev = false;
       return true;
     }, false,
-    [&](){OutputInGev = true;}, "Assume input is in MeV.{default=false}");
+    [&](){OutputInGev = true;}, "Multiply output momenta and energies by "
+      "1E3.{default=true}");
 
   CLIArgs::AddOpt("-g", "--generator", true,
     [&] (std::string const &opt) -> bool {
@@ -523,13 +521,13 @@ void SetOpts(){
 
     CLIArgs::AddOpt("-N", "--NEUT-Modes", true,
     [&] (std::string const &opt) -> bool {
-      ModeIgnores =
+      ModesToSave =
         PGUtils::StringVToIntV(PGUtils::SplitStringByDelim(opt,","));
 
-      if(ModeIgnores.size()){
+      if(ModesToSave.size()){
         std::cout << "\t--Ignoring interactions except of the modes:  "
           << std::flush;
-        for(auto const &mi : ModeIgnores){
+        for(auto const &mi : ModesToSave){
           std::cout << mi << ", " << std::flush;
         }
         std::cout << std::endl;
@@ -539,20 +537,6 @@ void SetOpts(){
     }, false,
     [](){},
     "<int,int,...> NEUT modes to save output from.");
-
-  CLIArgs::AddOpt("-B", "--Binding-Energy", true,
-    [&] (std::string const &opt) -> bool {
-      float vbhold = std::stof(opt);
-      if(vbhold){
-        std::cout << "\t--Using  " << vbhold << " MeV binding energy in ERec"
-          << std::endl;
-        TargetBE_MeV = vbhold;
-        return true;
-      }
-      return false;
-    }, false,
-    [&](){TargetBE_MeV = 0xdeadbeef;},
-    "<float> Binding energy used in nu_erec calculations [MeV] {default=25.0}");
 
     CLIArgs::AddOpt("-L", "--Lite-Output", false,
     [&] (std::string const &opt) -> bool {
