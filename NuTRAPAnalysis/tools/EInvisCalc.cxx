@@ -12,7 +12,6 @@
 std::string InputFileDescriptor = "";
 Double_t BindingEnergy;
 Int_t NEvs = 0;
-bool IsLiteMode = false;
 
 
 template<typename TH>
@@ -55,29 +54,21 @@ void SetOpts(){
     [](){},
     "File to read input tree from.");
 
-    CLIArgs::AddOpt("-B", "--Binding-Energy", true,
-    [&] (std::string const &opt) -> bool {
-      BindingEnergy = std::stod(opt);
-      return true;
-    }, true,
-    [](){},
-    "Input tree is built from TransversityVarsLite instances.");
+  CLIArgs::AddOpt("-B", "--Binding-Energy", true,
+  [&] (std::string const &opt) -> bool {
+    BindingEnergy = std::stod(opt);
+    return true;
+  }, true,
+  [](){},
+  "Input tree is built from TransversityVarsLite instances.");
 
-    CLIArgs::AddOpt("-n", "--nevs", true,
-    [&] (std::string const &opt) -> bool {
-      NEvs = std::stoi(opt);
-      return true;
-    }, false,
-    [](){NEvs=-1;},
-    "[-1 means all in input tree. {Default:-1}]");
-
-    CLIArgs::AddOpt("-L", "--Lite-Mode", false,
-    [&] (std::string const &opt) -> bool {
-      IsLiteMode = PGUtils::str2bool(opt);
-      return true;
-    }, false,
-    [](){IsLiteMode = false;},
-    "Input tree is built from TransversityVarsLite instances.");
+  CLIArgs::AddOpt("-n", "--nevs", true,
+  [&] (std::string const &opt) -> bool {
+    NEvs = std::stoi(opt);
+    return true;
+  }, false,
+  [](){NEvs=-1;},
+  "[Read at most N events. \'-1\' means read all. {Default:-1}]");
 }
 
 Long64_t LoopEvents(TChain *TRAPChain,
