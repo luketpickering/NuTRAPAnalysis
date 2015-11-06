@@ -13,8 +13,6 @@
 
 namespace TransversityUtils {
 
-enum Generators {kNEUT,kGENIE,kNuWro,kGiBUU,kInvalid};
-
 TVector3 GetVectorInTPlane(const TVector3& inp,
   const TVector3& planarNormal);
 

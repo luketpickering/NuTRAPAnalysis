@@ -98,9 +98,9 @@ void TransversityVarsB::HandleCPion(TLorentzVector &StdHepPTLV,
 }
 
 void TransversityVarsB::HandleStruckNucleon(TLorentzVector &StdHepPTLV,
-  Double_t &StdHepP3Mod, Int_t pdg){
+  Int_t pdg){
 
-  StruckNucleon.Momentum = StdHepP3Mod;
+  StruckNucleon.Momentum = StdHepPTLV.Vect().Mag();
   StruckNucleon.FourMomentum = StdHepPTLV;
   StruckNucleon.PDG = pdg;
 }
@@ -649,33 +649,6 @@ void TransversityVars::HandleCPion(TLorentzVector &StdHepPTLV,
   }
 }
 
-void TransversityVars::HandleRescat(Int_t PDG, Int_t RescatCode){
-  if(PDG == 2212){
-    switch(RescatCode){
-      case 1:{
-        ProtonRescat_contains_NoInt = true;
-        break;
-      }
-      case 2:{
-        ProtonRescat_contains_chrgEx = true;
-        break;
-      }
-      case 3:{
-        ProtonRescat_contains_elastic = true;
-        break;
-      }
-      case 4:{
-        ProtonRescat_contains_inelastic = true;
-        break;
-      }
-      case 5:{
-        ProtonRescat_contains_knockout = true;
-        break;
-      }
-    }
-  }
-}
-
 bool TransversityVars::HandleStdHepParticle(
   UInt_t &StdHepPosition,
   Int_t &StdHepPdg,
@@ -1041,11 +1014,6 @@ void TransversityVars::Reset(){
 //******************************************************************************
 //                       Others and Transients
 //******************************************************************************
-  ProtonRescat_contains_NoInt = false;
-  ProtonRescat_contains_chrgEx = false;
-  ProtonRescat_contains_elastic = false;
-  ProtonRescat_contains_inelastic = false;
-  ProtonRescat_contains_knockout = false;
 
   //Transients
   FirstProton.Reset();
@@ -1196,17 +1164,6 @@ void TransversityVars::AddBranches(TTree* tree){
 //******************************************************************************
 //                       Others and Transients
 //******************************************************************************
-  tree->Branch("ProtonRescat_contains_NoInt", &ProtonRescat_contains_NoInt,
-    "ProtonRescat_contains_NoInt/O");
-  tree->Branch("ProtonRescat_contains_chrgEx", &ProtonRescat_contains_chrgEx,
-    "ProtonRescat_contains_chrgEx/O");
-  tree->Branch("ProtonRescat_contains_elastic", &ProtonRescat_contains_elastic,
-    "ProtonRescat_contains_elastic/O");
-  tree->Branch("ProtonRescat_contains_inelastic",
-    &ProtonRescat_contains_inelastic, "ProtonRescat_contains_inelastic/O");
-  tree->Branch("ProtonRescat_contains_knockout",
-    &ProtonRescat_contains_knockout, "ProtonRescat_contains_knockout/O");
-
 //******************************************************************************
 //******************************************************************************
 }

@@ -12,43 +12,9 @@
 
 #include "TransversityUtils.hxx"
 #include "TransversityVariableObjects.hxx"
+#include "GeneratorSpecifics.hxx"
 
 using namespace TransversityUtils;
-
-namespace GeneratorDependent {
-
-constexpr int kGStdHepNPmax = 350;
-constexpr int kNStdHepNPmax = 100;
-constexpr int kNuStdHepNPmax = 4000;
-constexpr int kGiStdHepNPmax = 100;
-
-TObjString* NeutReacCode = 0;
-Int_t NStdHepN;
-Int_t NStdHepPdg[kNStdHepNPmax];
-Int_t NStdHepStatus[kNStdHepNPmax];
-Double_t NStdHepP4[kNStdHepNPmax][4];
-
-TObjString* NuWroEvtCode = 0;
-Int_t NuStdHepN;
-Int_t NuStdHepPdg[kNuStdHepNPmax];
-Int_t NuStdHepStatus[kNuStdHepNPmax];
-Double_t NuStdHepP4[kNuStdHepNPmax][4];
-
-Int_t G2NeutEvtCode;
-Int_t GStdHepN;
-Int_t GStdHepPdg[kGStdHepNPmax];
-Int_t GStdHepStatus[kGStdHepNPmax];
-Int_t GStdHepRescat[kGStdHepNPmax];
-Double_t GStdHepP4[kGStdHepNPmax][4];
-
-Int_t Gi2NeutEvtCode;
-Int_t GiStdHepN;
-Int_t GiStdHepPdg[kGiStdHepNPmax];
-Int_t GiStdHepStatus[kGiStdHepNPmax];
-Double_t GiStdHepP4[kGiStdHepNPmax][4];
-
-} // namespace GeneratorDependent
-
 
 //There'll be no name collisions in my DOJO, might be binary bloat though...
 namespace {
@@ -60,80 +26,33 @@ namespace {
   Int_t NThresh = 0;
   Int_t Threshs_MeV[kNThreshMax];
 
-  std::string TreeName="nRooTracker";
-  TString generatorName;
-
-  Generators Generator = kInvalid;
-
-  constexpr int kStdHepIdxPx = 0;
-  constexpr int kStdHepIdxPy = 1;
-  constexpr int kStdHepIdxPz = 2;
-  constexpr int kStdHepIdxE = 3;
-
-  Int_t* StdHepN = 0;
-  Int_t* StdHepPdg = 0;
-  Double_t** StdHepP4 = 0;
-  Int_t* StdHepStatus = 0;
-  Int_t* StdHepRescat = 0;
-
-  int NeutConventionReactionCode;
-
   std::vector<int> ModesToSave;
+
+  Generator* GenProxy;
 
 } // namespace
 
 bool SetUpGeneratorDependence(std::string GeneratorName){
 
   if((GeneratorName == "NEUT") || (GeneratorName == "neut")){
-
-    generatorName = "NEUT";
-    StdHepN = &GeneratorDependent::NStdHepN;
-    StdHepPdg = GeneratorDependent::NStdHepPdg;
-    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NStdHepP4);
-    StdHepStatus = GeneratorDependent::NStdHepStatus;
-    TreeName = "nRooTracker";
-    Generator = kNEUT;
-    std::cout << "Working on NEUT Tree: " << TreeName
+    GenProxy = new NEUT();
+    std::cout << "Working on NEUT Tree: " << GenProxy->TreeName
       << std::endl;
   } else if((GeneratorName == "GENIE") || (GeneratorName == "genie")){
-
-    generatorName = "GENIE";
-    StdHepN = &GeneratorDependent::GStdHepN;
-    StdHepPdg = GeneratorDependent::GStdHepPdg;
-    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GStdHepP4);
-    StdHepStatus = GeneratorDependent::GStdHepStatus;
-    StdHepRescat = GeneratorDependent::GStdHepRescat;
-    TreeName = "gRooTracker";
-    Generator = kGENIE;
-    std::cout << "Working on GENIE Tree: " << TreeName
+    GenProxy = new GENIE();
+    std::cout << "Working on GENIE Tree: " << GenProxy->TreeName
       << std::endl;
   } else if((GeneratorName == "NuWro") || (GeneratorName == "nuwro") ||
       (GeneratorName == "NUWRO")){
-
-    generatorName = "NuWro";
-    StdHepN = &GeneratorDependent::NuStdHepN;
-    StdHepPdg = GeneratorDependent::NuStdHepPdg;
-    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::NuStdHepP4);
-    StdHepStatus = GeneratorDependent::NuStdHepStatus;
-    TreeName = "nRooTracker";
-    Generator = kNuWro;
-    std::cout << "Working on NuWro Tree: " << TreeName
+    GenProxy = new NuWro();
+    std::cout << "Working on NuWro Tree: " << GenProxy->TreeName
       << std::endl;
   } else if((GeneratorName == "GiBUU") || (GeneratorName == "gibuu") ||
       (GeneratorName == "GIBUU")){
-
-    generatorName = "GiBUU";
-    StdHepN = &GeneratorDependent::GiStdHepN;
-    StdHepPdg = GeneratorDependent::GiStdHepPdg;
-    StdHepP4 = PGUtils::NewPPOf2DArray(GeneratorDependent::GiStdHepP4);
-    StdHepStatus = GeneratorDependent::GiStdHepStatus;
-    TreeName = "giRooTracker";
-    Generator = kGiBUU;
-    std::cout << "Working on GiBUU Tree: " << TreeName
+    GenProxy = new GiBUU();
+    std::cout << "Working on GiBUU Tree: " << GenProxy->TreeName
       << std::endl;
   } else {
-    std::cout << "Unknown Generator string: " << GeneratorName
-      << ". Exiting in error." << std::endl;
     return false;
   }
 
@@ -150,79 +69,18 @@ int ProcessRootrackerToTransversityVariables(
     return 1;
   }
 
-  TChain* RooTrackerChain = new TChain(TreeName.c_str());
+  TChain* RooTrackerChain = new TChain(GenProxy->TreeName.c_str());
   RooTrackerChain->SetDirectory(0);
 
   int nFiles = 0, nEntries = 0;
-  if( !(nFiles =RooTrackerChain->Add(InputName)) ||
-      !(nEntries =RooTrackerChain->GetEntries())){
+  if( !(nFiles = RooTrackerChain->Add(InputName)) ||
+      !(nEntries = RooTrackerChain->GetEntries())){
     std::cout << "[ERROR] Found no files (" << nFiles
       << ") or entries (" << nEntries  << ")" << std::endl;
     return 2;
   }
 
-  switch(Generator){
-    case kNEUT:{
-      RooTrackerChain->SetBranchAddress("EvtCode",
-        &GeneratorDependent::NeutReacCode);
-      RooTrackerChain->SetBranchAddress("StdHepN",
-        &GeneratorDependent::NStdHepN);
-      RooTrackerChain->SetBranchAddress("StdHepPdg",
-        GeneratorDependent::NStdHepPdg);
-      RooTrackerChain->SetBranchAddress("StdHepP4",
-        GeneratorDependent::NStdHepP4);
-      RooTrackerChain->SetBranchAddress("StdHepStatus",
-        GeneratorDependent::NStdHepStatus);
-      break;
-    }
-    case kGENIE:{
-      RooTrackerChain->SetBranchAddress("G2NeutEvtCode",
-        &GeneratorDependent::G2NeutEvtCode);
-      RooTrackerChain->SetBranchAddress("StdHepN",
-        &GeneratorDependent::GStdHepN);
-      RooTrackerChain->SetBranchAddress("StdHepPdg",
-        GeneratorDependent::GStdHepPdg);
-      RooTrackerChain->SetBranchAddress("StdHepP4",
-        GeneratorDependent::GStdHepP4);
-      RooTrackerChain->SetBranchAddress("StdHepStatus",
-        GeneratorDependent::GStdHepStatus);
-      RooTrackerChain->SetBranchAddress("StdHepRescat",
-        GeneratorDependent::GStdHepRescat);
-      break;
-    }
-    case kNuWro:{
-      RooTrackerChain->SetBranchAddress("EvtCode",
-        &GeneratorDependent::NuWroEvtCode);
-      RooTrackerChain->SetBranchAddress("StdHepN",
-        &GeneratorDependent::NuStdHepN);
-      RooTrackerChain->SetBranchAddress("StdHepPdg",
-        GeneratorDependent::NuStdHepPdg);
-      RooTrackerChain->SetBranchAddress("StdHepP4",
-        GeneratorDependent::NuStdHepP4);
-      RooTrackerChain->SetBranchAddress("StdHepStatus",
-        GeneratorDependent::NuStdHepStatus);
-      break;
-    }
-    case kGiBUU:{
-      RooTrackerChain->SetBranchAddress("GiBUU2NeutCode",
-        &GeneratorDependent::Gi2NeutEvtCode);
-      RooTrackerChain->SetBranchAddress("StdHepN",
-        &GeneratorDependent::GiStdHepN);
-      RooTrackerChain->SetBranchAddress("StdHepPdg",
-        GeneratorDependent::GiStdHepPdg);
-      RooTrackerChain->SetBranchAddress("StdHepP4",
-        GeneratorDependent::GiStdHepP4);
-      RooTrackerChain->SetBranchAddress("StdHepStatus",
-        GeneratorDependent::GiStdHepStatus);
-      break;
-    }
-    case kInvalid:
-    default:{
-      std::cerr << "This really shouldn't happen." << std::endl;
-      return 4;
-      break;
-    }
-  }
+  GenProxy->Init(RooTrackerChain);
 
   TFile* outFile = new TFile(OutputName,"CREATE");
   if(!outFile->IsOpen()){
@@ -231,18 +89,8 @@ int ProcessRootrackerToTransversityVariables(
   }
   TTree* outTreePureSim = new TTree("TransversitudenessPureSim","");
 
-  TransversityVarsB* OutObjectInfo;
-  if(LiteOutput) {
-    TransversityVarsB* OutObjectInfo_obj =
-      new TransversityVarsB(MultiplyByGeVToMeV);
-    OutObjectInfo = OutObjectInfo_obj;
-  } else {
-    TransversityVars* OutObjectInfo_obj =
-      new TransversityVars(MultiplyByGeVToMeV, NThresh, Threshs_MeV,
-        generatorName);
-    OutObjectInfo = OutObjectInfo_obj;
-  }
-  OutObjectInfo->AddBranches(outTreePureSim);
+  GenProxy->AddOutputBranches(outTreePureSim,LiteOutput,MultiplyByGeVToMeV,
+    NThresh,Threshs_MeV);
 
   long long doEntries = (MaxEntries==-1) ?
     RooTrackerChain->GetEntries() :
@@ -251,163 +99,23 @@ int ProcessRootrackerToTransversityVariables(
   for(long long i = 0; i < doEntries; ++i){
     RooTrackerChain->GetEntry(i);
 
-    OutObjectInfo->Reset();
     if(!(i%10000)){
       std::cout << "On entry: " << i  << "/" << doEntries << std::endl;
     }
 
-    switch(Generator){
-      case kNuWro:{
-        if(PGUtils::str2int(NeutConventionReactionCode,
-                  GeneratorDependent::NuWroEvtCode->String().Data())
-          != PGUtils::STRINT_SUCCESS){
-          std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
-            GeneratorDependent::NuWroEvtCode->String().Data() << std::endl;
-        }
-        break;
-      }
-      case kNEUT:{
-        if(PGUtils::str2int(NeutConventionReactionCode,
-                  GeneratorDependent::NeutReacCode->String().Data())
-          != PGUtils::STRINT_SUCCESS){
-          std::cout << "[WARN]: " << "Couldn't parse reaction code: " <<
-            GeneratorDependent::NeutReacCode->String() << std::endl;
-        }
-        break;
-      }
-      case kGENIE:{
-        NeutConventionReactionCode = GeneratorDependent::G2NeutEvtCode;
-        break;
-      }
-      case kGiBUU:{
-        NeutConventionReactionCode = GeneratorDependent::Gi2NeutEvtCode;
-        break;
-      }
-      case kInvalid:
-      default:{
-        std::cerr << "This really shouldn't happen." << std::endl;
-        break;
-      }
-    }
-
-    for(UInt_t partNum = 0; partNum < UInt_t(*StdHepN); ++partNum){
-
-      OutObjectInfo->HandleStdHepParticle(partNum, StdHepPdg[partNum],
-        StdHepStatus[partNum], StdHepP4[partNum]);
-
-      //Struck Nucleon kinematics are stored differently for the different
-      //generators
-      switch(Generator){
-        case kNuWro:{
-          if(partNum == 1){
-            TLorentzVector StdHepPTLV = TLorentzVector(
-              StdHepP4[partNum][kStdHepIdxPx],
-              StdHepP4[partNum][kStdHepIdxPy],
-              StdHepP4[partNum][kStdHepIdxPz],
-              StdHepP4[partNum][kStdHepIdxE]);
-            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-
-            Int_t StruckNucleonPDGGuess = 0;
-            Double_t StruckNucleonMass = StdHepPTLV.M();
-
-            if(StruckNucleonMass < 0.939 && StruckNucleonMass > 0.938){
-              StruckNucleonPDGGuess = 2212;
-            } else if(StruckNucleonMass < 0.940 && StruckNucleonMass > 0.939){
-              StruckNucleonPDGGuess = 2112;
-            } else if(StruckNucleonMass > 1E-6 &&
-                      NeutConventionReactionCode == 11){
-              std::cout << "[WARN]: Found struck nucleon with mass: "
-                << StruckNucleonMass << ", reaction code: "
-                << NeutConventionReactionCode << std::endl;
-            }
-            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
-              StruckNucleonPDGGuess);
-          }
-          break;
-        }
-        case kGENIE:{
-          if(StdHepStatus[partNum] == 14 && !LiteOutput){
-            static_cast<TransversityVars*>(OutObjectInfo)\
-              ->HandleRescat(StdHepPdg[partNum],
-                StdHepRescat[partNum]);
-          }
-          if(StdHepStatus[partNum]==11){
-            TLorentzVector StdHepPTLV = TLorentzVector(
-              StdHepP4[partNum][kStdHepIdxPx],
-              StdHepP4[partNum][kStdHepIdxPy],
-              StdHepP4[partNum][kStdHepIdxPz],
-              StdHepP4[partNum][kStdHepIdxE]);
-            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
-              StdHepPdg[partNum]);
-          }
-          break;
-        }
-        case kNEUT:{
-          if(StdHepStatus[partNum]==11){
-            TLorentzVector StdHepPTLV = TLorentzVector(
-              StdHepP4[partNum][kStdHepIdxPx],
-              StdHepP4[partNum][kStdHepIdxPy],
-              StdHepP4[partNum][kStdHepIdxPz],
-              StdHepP4[partNum][kStdHepIdxE]);
-            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
-              StdHepPdg[partNum]);
-          }
-          break;
-        }
-        case kGiBUU:{
-          if(StdHepStatus[partNum]==11){
-            TLorentzVector StdHepPTLV = TLorentzVector(
-              StdHepP4[partNum][kStdHepIdxPx],
-              StdHepP4[partNum][kStdHepIdxPy],
-              StdHepP4[partNum][kStdHepIdxPz],
-              StdHepP4[partNum][kStdHepIdxE]);
-            Double_t StdHepP3Mod = StdHepPTLV.Vect().Mag();
-            OutObjectInfo->HandleStruckNucleon(StdHepPTLV, StdHepP3Mod,
-              StdHepPdg[partNum]);
-          }
-          break;
-        }
-      }
-    }
-
-    OutObjectInfo->Finalise();
-
-    //Bumps up the code for non-Delta++ resonances for incoming neutrinos.
-    if((OutObjectInfo->IncNeutrino_PDG > 0) &&
-      (Generator == kNuWro) &&
-      (NeutConventionReactionCode == 11) &&
-      (OutObjectInfo->StruckNucleonPDG != 2212) ){
-      OutObjectInfo->NeutConventionReactionCode = 12;
-    //Fixes broken neutrino codes.
-    } else if( (OutObjectInfo->IncNeutrino_PDG < 0) &&
-               (NeutConventionReactionCode > 0) ) {
-      //want antinu codes to be < 0
-       OutObjectInfo->NeutConventionReactionCode =
-        (-1*NeutConventionReactionCode);
-
-      //Fixes the code for antinu Delta0 resonances.
-      if( (Generator == kNuWro) &&
-          (NeutConventionReactionCode == 11) &&
-          (OutObjectInfo->StruckNucleonPDG == 2212) ){
-
-        OutObjectInfo->NeutConventionReactionCode = -13;
-      }
-    } else {
-      OutObjectInfo->NeutConventionReactionCode = NeutConventionReactionCode;
-    }
+    GenProxy->DoEvent();
+    GenProxy->Finalise();
 
     //Skips modes that we don't want to deal with.
     if(ModesToSave.size()){
       bool found = false;
       for(auto const & mi : ModesToSave){
-        if(mi == OutObjectInfo->NeutConventionReactionCode){
+        if(mi == GenProxy->NeutConventionReactionCode){
           found = true;
           break;
         }
       }
-      if(!found){
+      if(!found){ //do not save this event
         continue;
       }
     }
@@ -421,10 +129,9 @@ int ProcessRootrackerToTransversityVariables(
 
   outFile->Close();
 
+  delete GenProxy;
   delete RooTrackerChain;
   delete outFile;
-  delete [] StdHepP4;
-  delete OutObjectInfo;
 }
 
 namespace {

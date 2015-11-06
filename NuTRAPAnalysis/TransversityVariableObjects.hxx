@@ -5,8 +5,10 @@
 
 #include "TObject.h"
 #include "TLorentzVector.h"
+#include "TTree.h"
 
 #include "TransversityUtils.hxx"
+
 
 static const Int_t kNThreshMax = 10;
 static const Int_t kMaxFSMomenta = 20;
@@ -177,8 +179,7 @@ public:
                             Int_t &StdHepPdg,
                             Int_t &StdHepStatus,
                             Double_t * &StdHepP4);
-  virtual void HandleStruckNucleon(TLorentzVector &StdHepPTLV,
-    Double_t &StdHepP3Mod, Int_t pdg);
+  virtual void HandleStruckNucleon(TLorentzVector &StdHepPTLV, Int_t pdg);
   virtual void Finalise();
   virtual void Reset();
 
@@ -311,12 +312,6 @@ public:
 //                       Others and Transients
 //******************************************************************************
 
-  Bool_t ProtonRescat_contains_NoInt;
-  Bool_t ProtonRescat_contains_chrgEx;
-  Bool_t ProtonRescat_contains_elastic;
-  Bool_t ProtonRescat_contains_inelastic;
-  Bool_t ProtonRescat_contains_knockout;
-
 //******************************************************************************
 //******************************************************************************
 
@@ -332,11 +327,9 @@ public:
                             Int_t &StdHepPdg,
                             Int_t &StdHepStatus,
                             Double_t * &StdHepP4);
-  void HandleRescat(Int_t PDG, Int_t RescatCode);
 
   void Finalise();
   void Reset();
-
 };
 
 TransversityVarsB const * const MakeReadingTransversityVarsB(TTree* tree);
