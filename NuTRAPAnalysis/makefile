@@ -90,5 +90,5 @@ clean:
         $(TARGET)
 
 distclean: clean
-	rm -rf $(BDIR) \
+	rm -rf $(BDIR)
 	cd $(UTILSLOC); $(MAKE) clean
