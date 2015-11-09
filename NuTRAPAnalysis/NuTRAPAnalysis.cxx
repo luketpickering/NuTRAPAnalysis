@@ -47,6 +47,11 @@ bool SetUpGeneratorDependence(std::string GeneratorName){
     GenProxy = new NuWro();
     std::cout << "Working on NuWro Tree: " << GenProxy->TreeName
       << std::endl;
+  } else if((GeneratorName == "ENuWro") || (GeneratorName == "enuwro") ||
+      (GeneratorName == "ENUWRO") ){
+    GenProxy = new EmuNuWro();
+    std::cout << "Working on Emulated NuWro Tree: " << GenProxy->TreeName
+      << std::endl;
   } else if((GeneratorName == "GiBUU") || (GeneratorName == "gibuu") ||
       (GeneratorName == "GIBUU")){
     GenProxy = new GiBUU();

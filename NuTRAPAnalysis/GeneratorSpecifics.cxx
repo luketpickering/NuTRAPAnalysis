@@ -257,6 +257,34 @@ void NuWro::Finalise(){
   Generator::Finalise();
 }
 //******************************************************************************
+//                     Emulated NuWro
+//******************************************************************************
+
+void EmuNuWro::Init(TTree* tree){
+  NuWro::Init(tree);
+  if(tree->SetBranchAddress("StruckNucleonPDG", &StruckNucleonPDG) !=
+    TTree::kMatch){
+    std::cout << "[ERROR]: Emulated NuWro tree did not contain auxilliary "
+      "StruckNucleonPDG Branch." << std::endl;
+    throw 5;
+  }
+}
+
+void EmuNuWro::HandleStdHepParticle(
+    UInt_t &StdHepPosition,
+    Int_t &StdHepPdg,
+    Int_t &StdHepStatus,
+    Double_t * &StdHepP4){
+
+  OutObjectInfo->HandleStdHepParticle(StdHepPosition,StdHepPdg,StdHepStatus,
+    StdHepP4);
+
+  if(StdHepPosition == 1){
+    Generator::HandleStruckNucleon(StdHepP4, StruckNucleonPDG);
+  }
+
+}
+//******************************************************************************
 //                     GiBUU
 //******************************************************************************
 void GiBUU::Init(TTree* tree){

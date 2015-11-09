@@ -6,7 +6,7 @@
 #include "TransversityVariableObjects.hxx"
 #include "TransversityUtils.hxx"
 
-enum GeneratorID {kNEUT,kGENIE,kNuWro,kGiBUU,kInvalid};
+enum GeneratorID {kNEUT,kGENIE,kNuWro,kEmuNuWro,kGiBUU,kInvalid};
 
 constexpr int kStdHepIdxPx = 0;
 constexpr int kStdHepIdxPy = 1;
@@ -105,7 +105,7 @@ class GENIE : public Generator {
     Double_t * &StdHepP4);
 
   public:
-    GENIE() : Generator() { generator = kNEUT; TreeName = "gRooTracker";
+    GENIE() : Generator() { generator = kGENIE; TreeName = "gRooTracker";
   GeneratorName = "GENIE"; }
 
   void Init(TTree* tree);
@@ -114,6 +114,7 @@ class GENIE : public Generator {
 };
 
 class NuWro : public Generator {
+protected:
   constexpr static int kNuStdHepNPmax = 4000;
 
   TObjString* NuWroEvtCode = 0;
@@ -122,20 +123,35 @@ class NuWro : public Generator {
   Int_t NuStdHepStatus[kNuStdHepNPmax];
   Double_t NuStdHepP4[kNuStdHepNPmax][4];
 
-  void StartEvent();
+  virtual void StartEvent();
 
-  void HandleStdHepParticle(
+  virtual void HandleStdHepParticle(
     UInt_t &StdHepPosition,
     Int_t &StdHepPdg,
     Int_t &StdHepStatus,
     Double_t * &StdHepP4);
 
   public:
-    NuWro() : Generator() { generator = kNEUT; TreeName = "nRooTracker";
+    NuWro() : Generator() { generator = kNuWro; TreeName = "nRooTracker";
   GeneratorName = "NuWro"; }
 
+  virtual void Init(TTree* tree);
+  virtual void Finalise();
+};
+
+class EmuNuWro : public NuWro {
+protected:
+  Int_t StruckNucleonPDG;
+  void HandleStdHepParticle(
+    UInt_t &StdHepPosition,
+    Int_t &StdHepPdg,
+    Int_t &StdHepStatus,
+    Double_t * &StdHepP4);
+
+public:
+  EmuNuWro() : NuWro() { generator = kEmuNuWro; };
   void Init(TTree* tree);
-  void Finalise();
+
 };
 
 class GiBUU : public Generator {
@@ -156,7 +172,7 @@ class GiBUU : public Generator {
     Double_t * &StdHepP4);
 
   public:
-    GiBUU() : Generator() { generator = kNEUT; TreeName = "giRooTracker";
+    GiBUU() : Generator() { generator = kGiBUU; TreeName = "giRooTracker";
   GeneratorName = "GiBUU"; }
 
   void Init(TTree* tree);
