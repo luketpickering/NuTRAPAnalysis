@@ -110,7 +110,8 @@ class GENIE : public Generator {
 
   void Init(TTree* tree);
 
-  void AddOutputBranches(TTree* tree, bool LiteOutput);
+  void AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
 };
 
 class NuWro : public Generator {
@@ -158,6 +159,8 @@ class GiBUU : public Generator {
   constexpr static int kGiStdHepNPmax = 100;
 
   Int_t Gi2NeutEvtCode;
+  Int_t GiBUUReactionCode;
+  Double_t GiBUUPerWeight;
   Int_t GiStdHepN;
   Int_t GiStdHepPdg[kGiStdHepNPmax];
   Int_t GiStdHepStatus[kGiStdHepNPmax];
@@ -176,6 +179,9 @@ class GiBUU : public Generator {
   GeneratorName = "GiBUU"; }
 
   void Init(TTree* tree);
+
+  void AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
 
 };
 

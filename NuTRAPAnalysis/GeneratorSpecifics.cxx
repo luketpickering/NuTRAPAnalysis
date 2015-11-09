@@ -18,14 +18,14 @@ Generator::~Generator(){
   }
 }
 
-void Generator::AddOutputBranches(TTree* OutputTree, bool LiteOutput,
+void Generator::AddOutputBranches(TTree* tree, bool LiteOutput,
   bool MultiplyByGeVToMeV, Int_t NThresh, Int_t* Threshs_MeV){
 
   OutObjectInfo = (LiteOutput?
     new TransversityVarsB(MultiplyByGeVToMeV):
     new TransversityVars(MultiplyByGeVToMeV,
       NThresh, Threshs_MeV, GeneratorName));
-  OutObjectInfo->AddBranches(OutputTree);
+  OutObjectInfo->AddBranches(tree);
   this->LiteOutput = LiteOutput;
 }
 
@@ -171,18 +171,20 @@ void GENIE::HandleRescat(Int_t PDG, Int_t RescatCode){
   }
 }
 
-void GENIE::AddOutputBranches(TTree* OutputTree, bool LiteOutput){
-  Generator::AddOutputBranches(OutputTree,LiteOutput);
+void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV, Int_t NThresh, Int_t* Threshs_Mev){
+  Generator::AddOutputBranches(tree, LiteOutput, MultiplyByGeVToMeV,
+    NThresh,Threshs_Mev);
   if(LiteOutput){
-    OutputTree->Branch("ProtonRescat_contains_NoInt",
+    tree->Branch("ProtonRescat_contains_NoInt",
       &ProtonRescat_contains_NoInt, "ProtonRescat_contains_NoInt/O");
-    OutputTree->Branch("ProtonRescat_contains_chrgEx",
+    tree->Branch("ProtonRescat_contains_chrgEx",
       &ProtonRescat_contains_chrgEx, "ProtonRescat_contains_chrgEx/O");
-    OutputTree->Branch("ProtonRescat_contains_elastic",
+    tree->Branch("ProtonRescat_contains_elastic",
       &ProtonRescat_contains_elastic, "ProtonRescat_contains_elastic/O");
-    OutputTree->Branch("ProtonRescat_contains_inelastic",
+    tree->Branch("ProtonRescat_contains_inelastic",
       &ProtonRescat_contains_inelastic, "ProtonRescat_contains_inelastic/O");
-    OutputTree->Branch("ProtonRescat_contains_knockout",
+    tree->Branch("ProtonRescat_contains_knockout",
       &ProtonRescat_contains_knockout, "ProtonRescat_contains_knockout/O");
   }
 }
@@ -293,11 +295,25 @@ void GiBUU::Init(TTree* tree){
   StdHepP4 = PGUtils::NewPPOf2DArray(GiStdHepP4);
   StdHepStatus = GiStdHepStatus;
 
+  tree->SetBranchAddress("GiBUUReactionCode",&GiBUUReactionCode);
+  tree->SetBranchAddress("GiBUUPerWeight",&GiBUUPerWeight);
+
   tree->SetBranchAddress("GiBUU2NeutCode", &Gi2NeutEvtCode);
   tree->SetBranchAddress("StdHepN", &GiStdHepN);
   tree->SetBranchAddress("StdHepPdg", GiStdHepPdg);
   tree->SetBranchAddress("StdHepP4", GiStdHepP4);
   tree->SetBranchAddress("StdHepStatus", GiStdHepStatus);
+}
+
+
+void GiBUU::AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV, Int_t NThresh, Int_t* Threshs_Mev){
+  Generator::AddOutputBranches(tree, LiteOutput, MultiplyByGeVToMeV,
+    NThresh,Threshs_Mev);
+  tree->Branch("GiBUUReactionCode",
+    &GiBUUReactionCode, "GiBUUReactionCode/I");
+  tree->Branch("GiBUUPerWeight",
+    &GiBUUPerWeight, "GiBUUPerWeight/D");
 }
 
 void GiBUU::StartEvent(){
