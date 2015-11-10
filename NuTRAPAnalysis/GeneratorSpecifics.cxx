@@ -245,16 +245,17 @@ void NuWro::HandleStdHepParticle(
 }
 
 void NuWro::Finalise(){
+  //Moves non Delta++ codes up one.
   if( (OutObjectInfo->IncNeutrino_PDG > 0) &&
       (NeutConventionReactionCode == 11) &&
       (OutObjectInfo->StruckNucleonPDG != 2212) ){
 
-    OutObjectInfo->NeutConventionReactionCode = 12;
-  //Fixes broken neutrino codes.
+    NeutConventionReactionCode = 12;
+  //Forces antineutrino Delta0 code
   } else if( (OutObjectInfo->IncNeutrino_PDG < 0) &&
              (NeutConventionReactionCode == 11) &&
               (OutObjectInfo->StruckNucleonPDG == 2212) ){
-    OutObjectInfo->NeutConventionReactionCode = -13;
+    NeutConventionReactionCode = -13;
   }
   Generator::Finalise();
 }
