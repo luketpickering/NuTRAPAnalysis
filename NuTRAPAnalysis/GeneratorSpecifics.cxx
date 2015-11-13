@@ -175,7 +175,7 @@ void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV, Int_t NThresh, Int_t* Threshs_Mev){
   Generator::AddOutputBranches(tree, LiteOutput, MultiplyByGeVToMeV,
     NThresh,Threshs_Mev);
-  if(LiteOutput){
+  if(!LiteOutput){
     tree->Branch("ProtonRescat_contains_NoInt",
       &ProtonRescat_contains_NoInt, "ProtonRescat_contains_NoInt/O");
     tree->Branch("ProtonRescat_contains_chrgEx",
