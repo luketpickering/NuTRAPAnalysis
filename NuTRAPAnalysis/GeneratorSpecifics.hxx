@@ -54,6 +54,7 @@ public:
 };
 
 class NEUT : public Generator {
+protected:
   constexpr static int kNStdHepNPmax = 100;
 
   TObjString* NeutReacCode = 0;
