@@ -22,7 +22,7 @@ ROOTCFLAGS := `$(RC) --cflags`
 ROOTLDFLAGS := `$(RC) --libs --glibs`
 
 CXXFLAGS := -fPIC $(ROOTCFLAGS) -I$(UTILSLOC) -g -std=c++11
-LDFLAGS := $(ROOTLDFLAGS) $(LIBUTILSLD) -Wl,-rpath=.
+LDFLAGS := $(ROOTLDFLAGS) $(LIBUTILSLD)
 
 .PHONY: all wtests clean
 

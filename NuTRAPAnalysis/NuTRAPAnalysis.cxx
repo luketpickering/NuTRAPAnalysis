@@ -137,6 +137,7 @@ int ProcessRootrackerToTransversityVariables(
   delete GenProxy;
   delete RooTrackerChain;
   delete outFile;
+  return 0;
 }
 
 namespace {
