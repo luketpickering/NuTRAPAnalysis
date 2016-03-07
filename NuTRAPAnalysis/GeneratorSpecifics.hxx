@@ -1,7 +1,7 @@
 #ifndef __GENERATOR_SPECIFICS_SEEN__
 #define __GENERATOR_SPECIFICS_SEEN__
 
-#include "TTree.h"
+#include "TChain.h"
 
 #include "TransversityVariableObjects.hxx"
 #include "TransversityUtils.hxx"
@@ -45,7 +45,7 @@ public:
   Generator();
   virtual ~Generator();
 
-  virtual void Init(TTree* tree) = 0;
+  virtual void Init(TChain* tree) = 0;
 
   virtual void AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
@@ -75,7 +75,7 @@ public:
   NEUT() : Generator() { generator = kNEUT; TreeName = "nRooTracker";
   GeneratorName = "NEUT"; }
 
-  void Init(TTree* tree);
+  void Init(TChain* tree);
 
 };
 
@@ -109,7 +109,7 @@ class GENIE : public Generator {
     GENIE() : Generator() { generator = kGENIE; TreeName = "gRooTracker";
   GeneratorName = "GENIE"; }
 
-  void Init(TTree* tree);
+  void Init(TChain* tree);
 
   void AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
@@ -124,6 +124,9 @@ protected:
   Int_t NuStdHepPdg[kNuStdHepNPmax];
   Int_t NuStdHepStatus[kNuStdHepNPmax];
   Double_t NuStdHepP4[kNuStdHepNPmax][4];
+  Double_t EvtWght;
+  Double_t ScaledEvtWght;
+  TChain * InpChain;
 
   virtual void StartEvent();
 
@@ -137,8 +140,11 @@ protected:
     NuWro() : Generator() { generator = kNuWro; TreeName = "nRooTracker";
   GeneratorName = "NuWro"; }
 
-  virtual void Init(TTree* tree);
+  virtual void Init(TChain* tree);
   virtual void Finalise();
+
+  void AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
 };
 
 class EmuNuWro : public NuWro {
@@ -152,7 +158,7 @@ protected:
 
 public:
   EmuNuWro() : NuWro() { generator = kEmuNuWro; };
-  void Init(TTree* tree);
+  void Init(TChain* tree);
 
 };
 
@@ -179,7 +185,7 @@ class GiBUU : public Generator {
     GiBUU() : Generator() { generator = kGiBUU; TreeName = "giRooTracker";
   GeneratorName = "GiBUU"; }
 
-  void Init(TTree* tree);
+  void Init(TChain* tree);
 
   void AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);

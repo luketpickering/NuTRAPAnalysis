@@ -133,6 +133,11 @@ bool TransversityVarsB::HandleStdHepParticle(
   if(StdHepPdg >= 1000000000){return false;} //Should catch nuclear PDGs
   if(StdHepPdg >= 2000000000){return false;} //GENIE psuedo particles
 
+  if(StdHepPdg > 100){
+    FS_ESum += StdHepPTLV.E();
+    FS_PSum += StdHepPTLV.Vect();
+  }
+
   switch(StdHepPdg){
     case -13:
     case 13:{
@@ -158,6 +163,8 @@ bool TransversityVarsB::HandleStdHepParticle(
       this->HandleHMTrackable(StdHepPTLV,StdHepP3Mod,StdHepPdg);
       NProtons++;
       NFinalStateParticles++;
+      ChargedFS_ESum += StdHepPTLV.E();
+      ChargedFS_PSum += StdHepPTLV.Vect();
       break;
     }
     case 2112:{
@@ -172,6 +179,8 @@ bool TransversityVarsB::HandleStdHepParticle(
       NChargedPions++;
       NPions++;
       NFinalStateParticles++;
+      ChargedFS_ESum += StdHepPTLV.E();
+      ChargedFS_PSum += StdHepPTLV.Vect();
       break;
     }
     case -211:{
@@ -181,6 +190,8 @@ bool TransversityVarsB::HandleStdHepParticle(
       NChargedPions++;
       NPions++;
       NFinalStateParticles++;
+      ChargedFS_ESum += StdHepPTLV.E();
+      ChargedFS_PSum += StdHepPTLV.Vect();
       break;
     }
     case 111:{
@@ -333,12 +344,14 @@ void TransversityVarsB::Finalise(){
 
   CCQ2 = (Muon.FourMomentum - MuonNeutrino.FourMomentum).Mag2();
 
+  HadrMass = sqrt(FS_ESum*FS_ESum - FS_PSum.Mag2());
+  ChargedHadrMass = sqrt(ChargedFS_ESum*ChargedFS_ESum - ChargedFS_PSum.Mag2());
+
 //******************************************************************************
 //******************************************************************************
 }
 
 void TransversityVarsB::Reset(){
-
 //******************************************************************************
 //                     Event Properties
 //******************************************************************************
@@ -425,6 +438,8 @@ void TransversityVarsB::Reset(){
 
   TargetPDG = 0;
   TargetZ = 0;
+  HadrMass = 0;
+  ChargedHadrMass = 0;
 
 //******************************************************************************
 //                       Others and Transients
@@ -440,6 +455,10 @@ void TransversityVarsB::Reset(){
   HMCPion.Reset();
   HMTrackable.Reset();
 
+  FS_ESum = 0;
+  FS_PSum = TVector3(0,0,0);
+  ChargedFS_ESum = 0;
+  ChargedFS_PSum = TVector3(0,0,0);
 //******************************************************************************
 //******************************************************************************
 
@@ -545,6 +564,8 @@ void TransversityVarsB::AddBranches(TTree* tree){
 //******************************************************************************
 
   tree->Branch("CCQ2", &CCQ2, "CCQ2/D");
+  tree->Branch("HadrMass", &HadrMass, "HadrMass/D");
+  tree->Branch("ChargedHadrMass", &ChargedHadrMass, "ChargedHadrMass/D");
 
 //******************************************************************************
 //******************************************************************************

@@ -51,6 +51,11 @@ protected:
   PartStruct HMCPion; //!
   PartStruct HMTrackable; //!
 
+  Double_t FS_ESum; //!
+  TVector3 FS_PSum; //!
+  Double_t ChargedFS_ESum; //!
+  TVector3 ChargedFS_PSum; //!
+
   TLorentzVector* _IncNeutrino_4Mom_MeV;
   TLorentzVector* _StruckNucleon_4Mom_MeV;
   TLorentzVector* _Muon_4Mom_MeV;
@@ -162,6 +167,8 @@ public:
 //******************************************************************************
 
   Double_t CCQ2;
+  Double_t HadrMass;
+  Double_t ChargedHadrMass;
 
 //******************************************************************************
 //******************************************************************************

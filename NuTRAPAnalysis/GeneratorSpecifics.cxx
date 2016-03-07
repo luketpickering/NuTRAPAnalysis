@@ -65,7 +65,7 @@ void Generator::Finalise(){
 //                     NEUT
 //******************************************************************************
 
-void NEUT::Init(TTree* tree){
+void NEUT::Init(TChain* tree){
   StdHepN = &NStdHepN;
   StdHepPdg = NStdHepPdg;
   StdHepP4 = PGUtils::NewPPOf2DArray(NStdHepP4);
@@ -103,7 +103,7 @@ void NEUT::HandleStdHepParticle(
 //******************************************************************************
 //                     GENIE
 //******************************************************************************
-void GENIE::Init(TTree* tree){
+void GENIE::Init(TChain* tree){
   StdHepN = &GStdHepN;
   StdHepPdg = GStdHepPdg;
   StdHepP4 = PGUtils::NewPPOf2DArray(GStdHepP4);
@@ -191,7 +191,7 @@ void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
 //******************************************************************************
 //                     NuWro
 //******************************************************************************
-void NuWro::Init(TTree* tree){
+void NuWro::Init(TChain* tree){
   StdHepN = &NuStdHepN;
   StdHepPdg = NuStdHepPdg;
   StdHepP4 = PGUtils::NewPPOf2DArray(NuStdHepP4);
@@ -202,6 +202,11 @@ void NuWro::Init(TTree* tree){
   tree->SetBranchAddress("StdHepPdg", NuStdHepPdg);
   tree->SetBranchAddress("StdHepP4", NuStdHepP4);
   tree->SetBranchAddress("StdHepStatus", NuStdHepStatus);
+  tree->SetBranchAddress("EvtWght", &EvtWght);
+
+  ///Need this so that we can keep up to date with the number of entries in
+  ///the input tree.
+  InpChain = tree;
 }
 
 void NuWro::StartEvent(){
@@ -244,6 +249,15 @@ void NuWro::HandleStdHepParticle(
   }
 }
 
+void NuWro::AddOutputBranches(TTree* tree, bool LiteOutput,
+    bool MultiplyByGeVToMeV, Int_t NThresh, Int_t* Threshs_Mev){
+  Generator::AddOutputBranches(tree, LiteOutput, MultiplyByGeVToMeV,
+    NThresh,Threshs_Mev);
+  if(!LiteOutput){
+    tree->Branch("EvtWght", &ScaledEvtWght, "EvtWght/D");
+  }
+}
+
 void NuWro::Finalise(){
   //Moves non Delta++ codes up one.
   if( (OutObjectInfo->IncNeutrino_PDG > 0) &&
@@ -257,13 +271,14 @@ void NuWro::Finalise(){
               (OutObjectInfo->StruckNucleonPDG == 2212) ){
     NeutConventionReactionCode = -13;
   }
+  ScaledEvtWght = EvtWght/double(InpChain->GetTree()->GetEntries());
   Generator::Finalise();
 }
 //******************************************************************************
 //                     Emulated NuWro
 //******************************************************************************
 
-void EmuNuWro::Init(TTree* tree){
+void EmuNuWro::Init(TChain* tree){
   NuWro::Init(tree);
   if(tree->SetBranchAddress("StruckNucleonPDG", &StruckNucleonPDG) !=
     TTree::kMatch){
@@ -290,7 +305,7 @@ void EmuNuWro::HandleStdHepParticle(
 //******************************************************************************
 //                     GiBUU
 //******************************************************************************
-void GiBUU::Init(TTree* tree){
+void GiBUU::Init(TChain* tree){
   StdHepN = &GiStdHepN;
   StdHepPdg = GiStdHepPdg;
   StdHepP4 = PGUtils::NewPPOf2DArray(GiStdHepP4);

@@ -52,7 +52,7 @@ tests: TransversityUnitTests.cxx TransversityUtils.o
 $(TARGET): $(TARGETSRC) $(TOBJO) $(LIBUTILS)
 	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ $(TOBJO) $(LDFLAGS)
 
-GeneratorSpecifics.o: GeneratorSpecifics.cxx GeneratorSpecifics.hxx TransversityUtils.hxx
+GeneratorSpecifics.o: GeneratorSpecifics.cxx GeneratorSpecifics.hxx TransversityUtils.hxx TransversityVariableObjects.hxx
 	$(CXX) $(CXXFLAGS) -c GeneratorSpecifics.cxx -o $@
 
 TransversityVariableObjects.o: TransversityVariableObjects.cxx TransversityVariableObjects.hxx TransversityUtils.hxx

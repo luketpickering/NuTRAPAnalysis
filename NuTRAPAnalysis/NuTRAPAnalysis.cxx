@@ -30,6 +30,8 @@ namespace {
 
   Generator* GenProxy;
 
+  bool DoRewrite = false;
+
 } // namespace
 
 bool SetUpGeneratorDependence(std::string GeneratorName){
@@ -87,7 +89,7 @@ int ProcessRootrackerToTransversityVariables(
 
   GenProxy->Init(RooTrackerChain);
 
-  TFile* outFile = new TFile(OutputName,"CREATE");
+  TFile* outFile = new TFile(OutputName,DoRewrite?"RECREATE":"CREATE");
   if(!outFile->IsOpen()){
     std::cout << "Failed to open: " << OutputName << std::endl;
     return 8;
@@ -159,6 +161,7 @@ void SetOpts(){
     [&] (std::string const &opt) -> bool {
       std::cout << "\t--Writing to File: " << opt << std::endl;
       OutputName = opt;
+      DoRewrite = true;
       return true;
     }, false,
     [&](){OutputName = "TransverseVars.root";},
