@@ -52,6 +52,7 @@ TransversityVarsB::TransversityVarsB(
   _HMProtonPion_3Mom_MeV = &HMProtonPion_3Mom_MeV;
   _deltapT_HMProtonPion_MeV = &deltapT_HMProtonPion_MeV;
   _Deltap_HMProtonPion_MeV = &Deltap_HMProtonPion_MeV;
+  _deltapT_HMCPion_MeV = &deltapT_HMCPion_MeV;
 
   Reset();
 }
@@ -277,6 +278,9 @@ void TransversityVarsB::Finalise(){
   TVector3 HMProtonPt_MeV = GetVectorInTPlane(HMProton.FourMomentum.Vect(),
     MuonNeutrino.FourMomentum.Vect());
 
+  TVector3 HMCPionPt_MeV = GetVectorInTPlane(HMCPion.FourMomentum.Vect(),
+    MuonNeutrino.FourMomentum.Vect());
+
 
 //deltaphiT
   deltaphiT_HMProton_deg = GetDeltaPhiT(
@@ -300,6 +304,25 @@ void TransversityVarsB::Finalise(){
   deltaalphaT_HMProton_deg = GetDeltaAlphaT(Muon_Pt_MeV,
                                     HMProtonPt_MeV,
                                     MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+
+//'verse vars between HMCPion and mu:
+
+//deltaphiT
+  deltaphiT_HMCPion_deg = GetDeltaPhiT(
+    Muon.FourMomentum.Vect(), HMCPion.FourMomentum.Vect(),
+    MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+
+//deltapt
+  deltapT_HMCPion_MeV = GetDeltaPT(Muon_Pt_MeV,
+                                    HMCPionPt_MeV,
+                                    MuonNeutrino.FourMomentum.Vect());
+
+//deltaalphaT
+  deltaalphaT_HMCPion_deg = GetDeltaAlphaT(Muon_Pt_MeV,
+                                    HMCPionPt_MeV,
+                                    MuonNeutrino.FourMomentum.Vect())*RadToDeg;
+
+
 //deltap_TT
   if((HMCPion.Momentum > 1E-3) && (HMProton.Momentum > 1E-3)){
 
@@ -402,6 +425,11 @@ void TransversityVarsB::Reset(){
   deltapT_HMProtonPion_MeV = TVector3(0,0,0);
   deltaalphaT_HMProtonPion_deg = 0;
   Deltap_HMProtonPion_MeV = TLorentzVector(0,0,0,0);
+
+//Form SVT with pion only (acts like mis-PID'd proton)
+  deltaphiT_HMCPion_deg = 0;
+  deltapT_HMCPion_MeV = TVector3(0,0,0);
+  deltaalphaT_HMCPion_deg = 0;
 
 //******************************************************************************
 //                       Subsequent Species Sums
@@ -515,6 +543,13 @@ void TransversityVarsB::AddBranches(TTree* tree){
   tree->Branch("deltaalphaT_HMProtonPion_deg", &deltaalphaT_HMProtonPion_deg,
     "deltaalphaT_HMProtonPion_deg/D");
   tree->Branch("Deltap_HMProtonPion_MeV", &_Deltap_HMProtonPion_MeV);
+
+//Form SVT with pion only (acts like mis-PID'd proton)
+  tree->Branch("deltaphiT_HMCPion_deg", &deltaphiT_HMCPion_deg,
+    "deltaphiT_HMCPion_deg/D");  
+  tree->Branch("deltapT_HMCPion_MeV", &_deltapT_HMCPion_MeV);
+  tree->Branch("deltaalphaT_HMCPion_deg", &deltaalphaT_HMCPion_deg,
+    "deltaalphaT_HMCPion_deg/D");
 
 //******************************************************************************
 //                       Subsequent Species Sums
@@ -1226,6 +1261,9 @@ struct Proxy {
   TVector3 *deltapT_HMProtonPion_MeV;
   TLorentzVector *Deltap_HMProtonPion_MeV;
 
+//Form SVT with pion only (acts like mis-PID'd proton)
+  TVector3 *deltapT_HMCPion_MeV;
+
 //******************************************************************************
 //******************************************************************************
 };
@@ -1332,6 +1370,12 @@ void SetBranchAddressesTransversityVarsB(TTree* tree, TransversityVarsB* tvb){
   tree->SetBranchAddress("deltaalphaT_HMProtonPion_deg", &tvb->deltaalphaT_HMProtonPion_deg);
   _prxy.back().Deltap_HMProtonPion_MeV = &tvb->Deltap_HMProtonPion_MeV;
   tree->SetBranchAddress("Deltap_HMProtonPion_MeV", &_prxy.back().Deltap_HMProtonPion_MeV);
+
+//Form SVT with pion only (acts like mis-PID'd proton)
+//  tree->SetBranchAddress("deltaphiT_HMCPion_deg", &tvb->deltaphiT_HMCPion_deg);
+//  _prxy.back().deltapT_HMCPion_MeV = &tvb->deltapT_HMCPion_MeV;
+//  tree->SetBranchAddress("deltapT_HMCPion_MeV", &_prxy.back().deltapT_HMCPion_MeV);
+//  tree->SetBranchAddress("deltaalphaT_HMCPion_deg", &tvb->deltaalphaT_HMCPion_deg);
 
 //******************************************************************************
 //                       Subsequent Species Sums

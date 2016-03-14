@@ -63,6 +63,7 @@ protected:
   TVector3* _HMProtonPion_3Mom_MeV;
   TVector3* _deltapT_HMProtonPion_MeV;
   TLorentzVector* _Deltap_HMProtonPion_MeV;
+  TVector3* _deltapT_HMCPion_MeV;
 
 
 public:
@@ -133,6 +134,11 @@ public:
   TVector3 deltapT_HMProtonPion_MeV;
   Double_t deltaalphaT_HMProtonPion_deg;
   TLorentzVector Deltap_HMProtonPion_MeV;
+
+//Form SVT with pion only (acts like mis-PID'd proton)
+  Double_t deltaphiT_HMCPion_deg;
+  TVector3 deltapT_HMCPion_MeV;
+  Double_t deltaalphaT_HMCPion_deg;
 
 //******************************************************************************
 //                       Subsequent Species Sums
