@@ -49,6 +49,7 @@ protected:
   PartStruct StruckNucleon; //!
   PartStruct HMProton; //!
   PartStruct HMCPion; //!
+  PartStruct HMPion; //!
   PartStruct HMTrackable; //!
 
   Double_t FS_ESum; //!
@@ -61,6 +62,7 @@ protected:
   TLorentzVector* _Muon_4Mom_MeV;
   TLorentzVector* _HMProton_4Mom_MeV;
   TLorentzVector* _HMCPion_4Mom_MeV;
+  TLorentzVector* _HMPion_4Mom_MeV;
   TLorentzVector* _HMTrackable_4Mom_MeV;
   TLorentzVector* _Deltap_HMProton_MeV;
   TLorentzVector* _deltap_HMProton_MeV;
@@ -101,6 +103,10 @@ public:
 //Highest Momentum Proton
   Int_t HMProton_PDG;
   TLorentzVector HMProton_4Mom_MeV;
+
+//Highest Momentum Pion
+  Int_t HMPion_PDG;
+  TLorentzVector HMPion_4Mom_MeV;
 
 //Highest Momentum Charged Pion
   Int_t HMCPion_PDG;
@@ -176,6 +182,8 @@ public:
 protected:
   virtual void HandleProton(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod, UInt_t &StdHepPosition);
+  virtual void HandlePion(TLorentzVector &StdHepPTLV,
+    Double_t &StdHepP3Mod, Int_t pdg);
   virtual void HandleCPion(TLorentzVector &StdHepPTLV,
     Double_t &StdHepP3Mod, Int_t pdg);
   virtual void HandleHMTrackable(TLorentzVector &StdHepPTLV,

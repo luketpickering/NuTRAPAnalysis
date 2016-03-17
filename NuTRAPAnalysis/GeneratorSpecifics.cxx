@@ -124,6 +124,16 @@ void GENIE::StartEvent(){
   ProtonRescat_contains_elastic = false;
   ProtonRescat_contains_inelastic = false;
   ProtonRescat_contains_knockout = false;
+  CPionRescat_contains_NoInt = false;
+  CPionRescat_contains_chrgEx = false;
+  CPionRescat_contains_elastic = false;
+  CPionRescat_contains_inelastic = false;
+  CPionRescat_contains_knockout = false;
+  Pion0Rescat_contains_NoInt = false;
+  Pion0Rescat_contains_chrgEx = false;
+  Pion0Rescat_contains_elastic = false;
+  Pion0Rescat_contains_inelastic = false;
+  Pion0Rescat_contains_knockout = false;
 }
 
 void GENIE::HandleStdHepParticle(
@@ -169,6 +179,54 @@ void GENIE::HandleRescat(Int_t PDG, Int_t RescatCode){
       }
     }
   }
+  if(abs(PDG) == 211){
+    switch(RescatCode){
+      case 1:{
+        CPionRescat_contains_NoInt = true;
+        break;
+      }
+      case 2:{
+        CPionRescat_contains_chrgEx = true;
+        break;
+      }
+      case 3:{
+        CPionRescat_contains_elastic = true;
+        break;
+      }
+      case 4:{
+        CPionRescat_contains_inelastic = true;
+        break;
+      }
+      case 5:{
+        CPionRescat_contains_knockout = true;
+        break;
+      }
+    }
+  }
+  if(PDG == 111){
+    switch(RescatCode){
+      case 1:{
+        Pion0Rescat_contains_NoInt = true;
+        break;
+      }
+      case 2:{
+        Pion0Rescat_contains_chrgEx = true;
+        break;
+      }
+      case 3:{
+        Pion0Rescat_contains_elastic = true;
+        break;
+      }
+      case 4:{
+        Pion0Rescat_contains_inelastic = true;
+        break;
+      }
+      case 5:{
+        Pion0Rescat_contains_knockout = true;
+        break;
+      }
+    }
+  }
 }
 
 void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
@@ -186,6 +244,28 @@ void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
       &ProtonRescat_contains_inelastic, "ProtonRescat_contains_inelastic/O");
     tree->Branch("ProtonRescat_contains_knockout",
       &ProtonRescat_contains_knockout, "ProtonRescat_contains_knockout/O");
+
+    tree->Branch("CPionRescat_contains_NoInt",
+      &CPionRescat_contains_NoInt, "CPionRescat_contains_NoInt/O");
+    tree->Branch("CPionRescat_contains_chrgEx",
+      &CPionRescat_contains_chrgEx, "CPionRescat_contains_chrgEx/O");
+    tree->Branch("CPionRescat_contains_elastic",
+      &CPionRescat_contains_elastic, "CPionRescat_contains_elastic/O");
+    tree->Branch("CPionRescat_contains_inelastic",
+      &CPionRescat_contains_inelastic, "CPionRescat_contains_inelastic/O");
+    tree->Branch("CPionRescat_contains_knockout",
+      &CPionRescat_contains_knockout, "CPionRescat_contains_knockout/O");
+
+    tree->Branch("Pion0Rescat_contains_NoInt",
+      &Pion0Rescat_contains_NoInt, "Pion0Rescat_contains_NoInt/O");
+    tree->Branch("Pion0Rescat_contains_chrgEx",
+      &Pion0Rescat_contains_chrgEx, "Pion0Rescat_contains_chrgEx/O");
+    tree->Branch("Pion0Rescat_contains_elastic",
+      &Pion0Rescat_contains_elastic, "Pion0Rescat_contains_elastic/O");
+    tree->Branch("Pion0Rescat_contains_inelastic",
+      &Pion0Rescat_contains_inelastic, "Pion0Rescat_contains_inelastic/O");
+    tree->Branch("Pion0Rescat_contains_knockout",
+      &Pion0Rescat_contains_knockout, "Pion0Rescat_contains_knockout/O");
   }
 }
 //******************************************************************************

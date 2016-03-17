@@ -87,6 +87,16 @@ class GENIE : public Generator {
   Bool_t ProtonRescat_contains_elastic;
   Bool_t ProtonRescat_contains_inelastic;
   Bool_t ProtonRescat_contains_knockout;
+  Bool_t CPionRescat_contains_NoInt;
+  Bool_t CPionRescat_contains_chrgEx;
+  Bool_t CPionRescat_contains_elastic;
+  Bool_t CPionRescat_contains_inelastic;
+  Bool_t CPionRescat_contains_knockout;
+  Bool_t Pion0Rescat_contains_NoInt;
+  Bool_t Pion0Rescat_contains_chrgEx;
+  Bool_t Pion0Rescat_contains_elastic;
+  Bool_t Pion0Rescat_contains_inelastic;
+  Bool_t Pion0Rescat_contains_knockout;
 
   Int_t G2NeutEvtCode;
   Int_t GStdHepN;

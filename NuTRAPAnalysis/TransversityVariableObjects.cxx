@@ -45,6 +45,7 @@ TransversityVarsB::TransversityVarsB(
   _Muon_4Mom_MeV = &Muon_4Mom_MeV;
   _HMProton_4Mom_MeV = &HMProton_4Mom_MeV;
   _HMCPion_4Mom_MeV = &HMCPion_4Mom_MeV;
+  _HMPion_4Mom_MeV = &HMPion_4Mom_MeV;
   _HMTrackable_4Mom_MeV = &HMTrackable_4Mom_MeV;
   _Deltap_HMProton_MeV = &Deltap_HMProton_MeV;
   _deltap_HMProton_MeV = &deltap_HMProton_MeV;
@@ -87,6 +88,16 @@ void TransversityVarsB::HandleHMTrackable(TLorentzVector &StdHepPTLV,
   }
 }
 
+void TransversityVarsB::HandlePion(TLorentzVector &StdHepPTLV,
+  Double_t &StdHepP3Mod, Int_t pdg){
+  if(StdHepP3Mod > HMPion.Momentum){
+    HMPion.Momentum = StdHepP3Mod;
+    HMPion.FourMomentum = StdHepPTLV;
+    HMPion.PDG = pdg;
+  }
+}
+
+
 void TransversityVarsB::HandleCPion(TLorentzVector &StdHepPTLV,
   Double_t &StdHepP3Mod, Int_t pdg){
 
@@ -95,6 +106,7 @@ void TransversityVarsB::HandleCPion(TLorentzVector &StdHepPTLV,
     HMCPion.FourMomentum = StdHepPTLV;
     HMCPion.PDG = pdg;
   }
+  HandlePion(StdHepPTLV,StdHepP3Mod,pdg);
 }
 
 void TransversityVarsB::HandleStruckNucleon(TLorentzVector &StdHepPTLV,
@@ -195,6 +207,7 @@ bool TransversityVarsB::HandleStdHepParticle(
       break;
     }
     case 111:{
+      this->HandlePion(StdHepPTLV,StdHepP3Mod,StdHepPdg);
       NPiZero++;
       NPions++;
       NFinalStateParticles++;
@@ -272,6 +285,10 @@ void TransversityVarsB::Finalise(){
   HMProton_PDG = HMProton.PDG;
   HMProton_4Mom_MeV = HMProton.FourMomentum;
 
+//Highest Momentum Pion
+  HMPion_PDG = HMPion.PDG;
+  HMPion_4Mom_MeV = HMPion.FourMomentum;
+
 //Highest Momentum Charged Pion
   HMCPion_PDG = HMCPion.PDG;
   HMCPion_4Mom_MeV = HMCPion.FourMomentum;
@@ -312,16 +329,16 @@ void TransversityVarsB::Finalise(){
                                     HMProtonPt_MeV,
                                     MuonNeutrino.FourMomentum.Vect())*RadToDeg;
 //deltap_TT
-  if((HMCPion.Momentum > 1E-3) && (HMProton.Momentum > 1E-3)){
+  if((HMPion.Momentum > 1E-3) && (HMProton.Momentum > 1E-3)){
 
     deltap_TT = TransversityUtils::GetDeltaPTT(
       Muon.FourMomentum.Vect(),
-      HMCPion.FourMomentum.Vect(),
+      HMPion.FourMomentum.Vect(),
       HMProton.FourMomentum.Vect(),
       MuonNeutrino.FourMomentum.Vect());
 
     HMProtonPion_3Mom_MeV = HMProton.FourMomentum.Vect() +
-      HMCPion.FourMomentum.Vect();
+      HMPion.FourMomentum.Vect();
 
     TVector3 HMProtonPionPt_MeV = GetVectorInTPlane(HMProtonPion_3Mom_MeV,
       MuonNeutrino.FourMomentum.Vect());
@@ -338,7 +355,7 @@ void TransversityVarsB::Finalise(){
                     MuonNeutrino.FourMomentum.Vect())*RadToDeg;
 
     Deltap_HMProtonPion_MeV = (Muon.FourMomentum + HMProton.FourMomentum
-      + HMCPion.FourMomentum - MuonNeutrino.FourMomentum
+      + HMPion.FourMomentum - MuonNeutrino.FourMomentum
       - StruckNucleon.FourMomentum);
   }
 
@@ -378,6 +395,10 @@ void TransversityVarsB::Reset(){
 //Highest Momentum Proton
   HMProton_PDG = 0;
   HMProton_4Mom_MeV = TLorentzVector(0,0,0,0);
+
+//Highest Momentum Pion
+  HMPion_PDG = 0;
+  HMPion_4Mom_MeV = TLorentzVector(0,0,0,0);
 
 //Highest Momentum Charged Pion
   HMCPion_PDG = 0;
@@ -497,6 +518,10 @@ void TransversityVarsB::AddBranches(TTree* tree){
 //Highest Momentum Charged Pion
   tree->Branch("HMCPion_PDG",&HMCPion_PDG, "HMCPion_PDG/I");
   tree->Branch("HMCPion_4Mom_MeV", &_HMCPion_4Mom_MeV);
+
+//Highest Momentum Pion
+  tree->Branch("HMPion_PDG",&HMPion_PDG, "HMPion_PDG/I");
+  tree->Branch("HMPion_4Mom_MeV", &_HMPion_4Mom_MeV);
 
 //Highest Momentum Trackable
   tree->Branch("HMTrackable_PDG",&HMTrackable_PDG, "HMTrackable_PDG/I");
