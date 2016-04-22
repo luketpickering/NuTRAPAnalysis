@@ -104,6 +104,9 @@ class GENIE : public Generator {
   Int_t GStdHepStatus[kGStdHepNPmax];
   Int_t GStdHepRescat[kGStdHepNPmax];
   Double_t GStdHepP4[kGStdHepNPmax][4];
+  Double_t EvtXSec;
+  Double_t ScaledEvtWght;
+  TChain * InpChain;
 
   void StartEvent();
 
@@ -120,6 +123,7 @@ class GENIE : public Generator {
   GeneratorName = "GENIE"; }
 
   void Init(TChain* tree);
+  void Finalise();
 
   void AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);

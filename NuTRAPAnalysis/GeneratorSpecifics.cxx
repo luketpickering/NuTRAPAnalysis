@@ -110,11 +110,21 @@ void GENIE::Init(TChain* tree){
   StdHepStatus = GStdHepStatus;
 
   tree->SetBranchAddress("G2NeutEvtCode", &G2NeutEvtCode);
+  tree->SetBranchAddress("EvtXSec", &EvtXSec);
   tree->SetBranchAddress("StdHepN", &GStdHepN);
   tree->SetBranchAddress("StdHepPdg", GStdHepPdg);
   tree->SetBranchAddress("StdHepP4", GStdHepP4);
   tree->SetBranchAddress("StdHepStatus", GStdHepStatus);
   tree->SetBranchAddress("StdHepRescat", GStdHepRescat);
+
+  ///Need this so that we can keep up to date with the number of entries in
+  ///the input tree.
+  InpChain = tree;
+}
+
+void GENIE::Finalise(){
+  ScaledEvtWght = EvtXSec/double(InpChain->GetTree()->GetEntries());
+  Generator::Finalise();
 }
 
 void GENIE::StartEvent(){
@@ -266,6 +276,8 @@ void GENIE::AddOutputBranches(TTree* tree, bool LiteOutput,
       &Pion0Rescat_contains_inelastic, "Pion0Rescat_contains_inelastic/O");
     tree->Branch("Pion0Rescat_contains_knockout",
       &Pion0Rescat_contains_knockout, "Pion0Rescat_contains_knockout/O");
+
+    tree->Branch("EvtWght", &ScaledEvtWght, "EvtWght/D");
   }
 }
 //******************************************************************************
