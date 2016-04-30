@@ -681,6 +681,9 @@ void TransversityVars::HandleCPion(TLorentzVector &StdHepPTLV,
     HMCPion.FourMomentum = StdHepPTLV;
     HMCPion.PDG = pdg;
   }
+
+  HandlePion(StdHepPTLV,StdHepP3Mod,pdg);
+
   if((pdg == 211) &&
      ((StdHepPTLV.E()*(IsInGev?1000.0:1.0)) >
            __OtherFSPiPlus4Momenta_MeV[kMaxFSMomenta].E()) ){
