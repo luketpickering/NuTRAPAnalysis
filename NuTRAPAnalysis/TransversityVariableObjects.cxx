@@ -474,6 +474,7 @@ void TransversityVarsB::Reset(){
   StruckNucleon.Reset();
   HMProton.Reset();
   HMCPion.Reset();
+  HMPion.Reset();
   HMTrackable.Reset();
 
   FS_ESum = 0;
