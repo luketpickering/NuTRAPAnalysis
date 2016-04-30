@@ -766,8 +766,6 @@ bool TransversityVars::HandleStdHepParticle(
       break;
     }
     case -211:{
-      HandleHMTrackable(StdHepPTLV,StdHepP3Mod,StdHepPdg);
-      HandleCPion(StdHepPTLV,StdHepP3Mod,StdHepPdg);
       IncrementThreshArray(NAboveThresholdChargedPions,threshlvl);
       IncrementThreshArray(NAboveThresholdPiMinus,threshlvl);
       IncrementThreshArray(NAboveThresholdTrackable,threshlvl);
