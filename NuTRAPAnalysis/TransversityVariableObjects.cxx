@@ -351,7 +351,7 @@ void TransversityVarsB::Finalise() {
          MuonNeutrino.FourMomentum - StruckNucleon.FourMomentum);
   }
 
-  FourMomentumTransfer = (Muon.FourMomentum - MuonNeutrino.FourMomentum);
+  FourMomentumTransfer = (MuonNeutrino.FourMomentum - Muon.FourMomentum);
 
   HadrMass = sqrt(FS_ESum * FS_ESum - FS_PSum.Mag2());
   ChargedHadrMass =
@@ -592,9 +592,6 @@ void TransversityVarsB::AddBranches(TTree *tree) {
   tree->Branch("FS_PSum", &_FS_PSum);
   tree->Branch("ChargedFS_ESum", &ChargedFS_ESum, "ChargedHadrMass/D");
   tree->Branch("ChargedFS_PSum", &_ChargedFS_PSum);
-
-
-
 
 
   //******************************************************************************
