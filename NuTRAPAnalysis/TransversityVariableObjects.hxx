@@ -52,13 +52,9 @@ protected:
   PartStruct HMPion; //!
   PartStruct HMTrackable; //!
 
-  Double_t FS_ESum; //!
-  TVector3 FS_PSum; //!
-  Double_t ChargedFS_ESum; //!
-  TVector3 ChargedFS_PSum; //!
-
   TLorentzVector* _IncNeutrino_4Mom_MeV;
   TLorentzVector* _StruckNucleon_4Mom_MeV;
+  TLorentzVector* _FourMomentumTransfer;
   TLorentzVector* _Muon_4Mom_MeV;
   TLorentzVector* _HMProton_4Mom_MeV;
   TLorentzVector* _HMCPion_4Mom_MeV;
@@ -70,6 +66,9 @@ protected:
   TVector3* _HMProtonPion_3Mom_MeV;
   TVector3* _deltapT_HMProtonPion_MeV;
   TLorentzVector* _Deltap_HMProtonPion_MeV;
+
+  TVector3* _FS_PSum;
+  TVector3* _ChargedFS_PSum;
 
 
 public:
@@ -83,6 +82,7 @@ public:
 
 //Generator reaction code
   Int_t NeutConventionReactionCode;
+  Double_t EvtWght;
 
 //******************************************************************************
 //                     Pertinent Particle Properties
@@ -95,6 +95,8 @@ public:
 //Struck Nucleon
   Int_t StruckNucleonPDG;
   TLorentzVector StruckNucleon_4Mom_MeV;
+
+  TLorentzVector FourMomentumTransfer;
 
 //Muon
   Int_t Muon_PDG;
@@ -172,9 +174,13 @@ public:
 //                       Others and Transients
 //******************************************************************************
 
-  Double_t CCQ2;
   Double_t HadrMass;
   Double_t ChargedHadrMass;
+
+  Double_t FS_ESum;
+  TVector3 FS_PSum;
+  Double_t ChargedFS_ESum;
+  TVector3 ChargedFS_PSum;
 
 //******************************************************************************
 //******************************************************************************

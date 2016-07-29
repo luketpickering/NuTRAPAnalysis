@@ -37,6 +37,7 @@ protected:
   void HandleStruckNucleon(Double_t *&StdHepP4, Int_t pdg);
 public:
   int NeutConventionReactionCode;
+  Double_t ExtraWeight;
 
   virtual void Finalise();
 
@@ -182,6 +183,7 @@ class GiBUU : public Generator {
   Int_t Gi2NeutEvtCode;
   Int_t GiBUUReactionCode;
   Double_t GiBUUPerWeight;
+  Double_t EvtWght;
   Int_t GiStdHepN;
   Int_t GiStdHepPdg[kGiStdHepNPmax];
   Int_t GiStdHepStatus[kGiStdHepNPmax];
@@ -204,6 +206,8 @@ class GiBUU : public Generator {
   void AddOutputBranches(TTree* tree, bool LiteOutput,
     bool MultiplyByGeVToMeV=true, Int_t NThresh=0, Int_t* Threshs_MeV=0);
 
+
+  void Finalise();
 };
 
 #endif

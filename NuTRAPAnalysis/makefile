@@ -11,9 +11,9 @@ TOBJDICTS := TransversityVariableObjects_dict.cxx
 TDICTHEADERS := TransversityVariableObjects_dict.h
 TOBJO := $(TOBJS:.cxx=.o)
 
-UTILSLOC := ../utils
-LIBUTILS := $(UTILSLOC)/lib/libPureGenUtils.a
-LIBUTILSLD := -L$(UTILSLOC)/lib -lPureGenUtils
+UTILSLOC := ../utils/build/`uname`
+UTILSINC := $(UTILSLOC)/include
+LIBUTILSLD := -L$(UTILSLOC)/lib  -lLUtils
 
 TARGET := NuTRAPAnalysis.exe
 TARGETSRC := $(TARGET:.exe=.cxx)
@@ -21,7 +21,7 @@ TARGETSRC := $(TARGET:.exe=.cxx)
 ROOTCFLAGS := `$(RC) --cflags`
 ROOTLDFLAGS := `$(RC) --libs --glibs`
 
-CXXFLAGS := -fPIC $(ROOTCFLAGS) -I$(UTILSLOC) -g -std=c++11
+CXXFLAGS := -fPIC $(ROOTCFLAGS) -I$(UTILSINC) -g -std=c++11
 LDFLAGS := $(ROOTLDFLAGS) $(LIBUTILSLD)
 
 .PHONY: all wtests clean
@@ -43,13 +43,10 @@ wtests: $(TARGET) tests
 	@echo "Success. Built NuTRAPAnalysis."
 	@echo "*********************************************************************"
 
-$(LIBUTILS):
-	cd $(UTILSLOC); $(MAKE)
-
 tests: TransversityUnitTests.cxx TransversityUtils.o
 	$(CXX) -o TransversityTests.exe $(CXXFLAGS) TransversityUnitTests.cxx TransversityUtils.o $(LDFLAGS)
 
-$(TARGET): $(TARGETSRC) $(TOBJO) $(LIBUTILS)
+$(TARGET): $(TARGETSRC) $(TOBJO)
 	$(CXX) $(CXXFLAGS) $(TARGETSRC) -o $@ $(TOBJO) $(LDFLAGS)
 
 GeneratorSpecifics.o: GeneratorSpecifics.cxx GeneratorSpecifics.hxx TransversityUtils.hxx TransversityVariableObjects.hxx
@@ -64,19 +61,19 @@ TransversityUtils.o: TransversityUtils.cxx TransversityUtils.hxx
 EventLoop.o: tools/EventLoop.cxx tools/EventLoop.hxx
 	$(CXX) $(CXXFLAGS) $< -I. -c -o $@
 
-$(BDIR)/EvDump.exe: tools/EvDump.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o $(LIBUTILS)
+$(BDIR)/EvDump.exe: tools/EvDump.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o
 	$(CXX) $(CXXFLAGS) tools/EvDump.cxx -I. -Itools -o EvDump.exe EventLoop.o $(TOBJO) $(LDFLAGS)
 	mv EvDump.exe $(BDIR)
 
-$(BDIR)/MomCons.exe: tools/MomCons.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o $(LIBUTILS)
+$(BDIR)/MomCons.exe: tools/MomCons.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o
 	$(CXX) $(CXXFLAGS) tools/MomCons.cxx -I. -Itools -o MomCons.exe EventLoop.o $(TOBJO) $(LDFLAGS)
 	mv MomCons.exe $(BDIR)
 
-$(BDIR)/TauCalc.exe: tools/TauCalc.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o $(LIBUTILS)
+$(BDIR)/TauCalc.exe: tools/TauCalc.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o
 	$(CXX) $(CXXFLAGS) tools/TauCalc.cxx -I. -Itools -o TauCalc.exe EventLoop.o $(TOBJO) $(LDFLAGS)
 	mv TauCalc.exe $(BDIR)
 
-$(BDIR)/EInvisCalc.exe: tools/EInvisCalc.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o $(LIBUTILS)
+$(BDIR)/EInvisCalc.exe: tools/EInvisCalc.cxx TransversityVariableObjects.cxx TransversityVariableObjects.hxx EventLoop.o
 	$(CXX) $(CXXFLAGS) tools/EInvisCalc.cxx -I. -Itools -o EInvisCalc.exe EventLoop.o $(TOBJO) $(LDFLAGS)
 	mv EInvisCalc.exe $(BDIR)
 
